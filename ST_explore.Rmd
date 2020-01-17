@@ -1,18 +1,102 @@
 ---
-title: "R Notebook"
+#title: "SuperTransect 16S"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
 ```{r}
-plot(cars)
+                        ###############################################################
+                        #    ____                 ______                          __  #
+                        #   / __/_ _____  ___ ___/_  __/______ ____  ___ ___ ____/ /_ #
+                        #  _\ \/ // / _ \/ -_) __// / / __/ _ `/ _ \(_-</ -_) __/ __/ #
+                        # /___/\_,_/ .__/\__/_/  /_/ /_/  \_,_/_//_/___/\__/\__/\__/  #
+                        #         /_/                                                 #
+                        ###############################################################
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+Welcome to the SuperTransect. 
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+This is Illumina Miseq data looking at 16S (V4 region, primers 515/806R)
+Several sample types were sampled along 8 transects in Waimea Valley. 
+Each sample was duplicated for DNA extraction and metabolomics. 
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+# Metadata Overview
+Here's a quick breakdown of the metadata columns:
+
+**sample_barcode** is the unique identifier for each sample.
+
+These are all related to where the sample was collected. A little messy.
+
+* **site_code**
+* **transect_name**
+* **site_name**
+* **site_type**
+* **distance** 
+
+**lat** and **long** are in decimal degrees. Be careful, though, because some samples (like mosquitoes) have unique lat long decoupled from collection site.
+
+These are all related to the sample type (e.g. plants vs. water)
+
+* **sample_type**
+* **host** 
+* **habitat**
+* **trophic** 
+
+**analysis** indicated whether the sample was used for metabolomics (MS), dna extraction (DNA), or was split in the lab (MSandDNA).
+
+**processing and notes** are mostly for sample management or any additional metadata (e.g. species names). Look at these if you need to go deeper.
+
+
+```{r}
+suppressWarnings(library(dplyr))
+library(tidyr)
+library(stringr)
+
+file_metadata <- "../../data/raw/SuperTransect_All_Samples - all_collected_samples.csv"
+metadata <- read.csv(file_metadata , header = T)
+metadata <- metadata %>% select(-processing,-notes)
+
+# Column names
+colnames(metadata)
+
+# Dimensions
+dim(metadata)
+```
+### Transects
+
+We sampled 8 transects in the Waimea watershed ranging from the the summit of the watershed, Kainapuaa (STSummit), to the beach of Waimea Bay (STEstuary).
+```{r}
+transects <- metadata %>% filter(site_type == "Transect") %>% arrange(lat)
+unique(transects$transect_name) %>% as.character()
+
+```
+
+Each transect had 9 sampling points, spaced 100m apart. These can be accessed in the **distance** column.
+The **site_code** column replicates this information. **site_name** is the unique combination of transect name and distance.
+
+```{r}
+# distances
+unique(transects$distance) %>% as.character()
+
+# site codes
+unique(transects$site_code) %>% as.character()
+
+# site names
+unique(transects$site_name) %>% as.character()
+```
+
+### Marine Sites
+
+The four marine sites were sampled the same week as the transects. However, they are not transects and do not have any 'distance' structure.
+The sampling at these sites followed a bioblitz format. Host species are not necessarily the same across sites.
+Because there is no distance, site name and site code are the same.
+
+
+```{r}
+marine <- metadata %>% filter(site_type == "Core Waimea")
+# site name
+unique(marine$site_name) %>% as.character()
+# site code
+unique(marine$site_code) %>% as.character()
+
+```
+
