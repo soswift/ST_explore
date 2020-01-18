@@ -52,14 +52,11 @@ library(tidyr)
 library(stringr)
 
 file_metadata <- "../../data/raw/SuperTransect_All_Samples - all_collected_samples.csv"
-metadata <- read.csv(file_metadata , header = T)
-metadata <- metadata %>% select(-processing,-notes)
+metadata <- read.csv(file_metadata , header = T,colClasses = "character")
+metadata <- metadata %>% select(-processing,-notes) %>% arrange(sample_id)
 
 # Column names
-colnames(metadata)
-
-# Dimensions
-dim(metadata)
+metadata
 ```
 ### Transects
 
@@ -97,6 +94,34 @@ marine <- metadata %>% filter(site_type == "Core Waimea")
 unique(marine$site_name) %>% as.character()
 # site code
 unique(marine$site_code) %>% as.character()
+
+```
+
+
+# 16S Data Overview
+
+Before we read in the whole dataset, let's look at the reads per step to see how read attrition looks in the pipeline.
+
+```{r}
+file_run_map <- "../../data/raw/st_miseq04_mapping_file - run_map.csv"
+run_map <- read.csv(file_run_map, header = T, colClasses = "character")
+
+file_read_step <- "../../data/interim/sequences_per_sample_per_step_97.tsv"
+read_step <- read.table(file_read_step, sep = "\t",header = T)
+read_step <- apply(read_step, 2, function(x) sub(" \\((.+) uniques\\)","",x)) %>% as.data.frame(stringsAsFactors=F)
+
+colnames(read_step)[1] <- "id"
+
+read_step
+
+```
+
+Let's also read in the mapping file
+
+```{r}
+read_step <- read_step %>% left_join(run_map, by = "id") %>% left_join(metadata, by = "sample_barcode")
+read_step <- read_step %>% mutate(pass = ifelse(X12.Subsampling_97 == "/","No","Yes"))
+read_step %>% count(pass, sample_type)
 
 ```
 
