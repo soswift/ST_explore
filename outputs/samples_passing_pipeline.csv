@@ -1,0 +1,14 @@
+"","sample_type","Fail","Pass"
+"1","PlantShoot",42,7
+"2","PlantRoot",18,35
+"3","Coral",13,32
+"4","CCA",8,33
+"5","Sediment",6,53
+"6","SoilDeep",6,53
+"7",NA,5,7
+"8","NegativeControl",4,6
+"9","Limu",2,24
+"10","Mosquito",2,33
+"11","Drosophila",NA,39
+"12","SoilShallow",NA,59
+"13","WaterNonSaline",NA,68

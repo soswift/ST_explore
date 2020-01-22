@@ -1,6 +1,7 @@
 ---
-#title: "SuperTransect 16S"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r}
@@ -119,9 +120,22 @@ read_step
 Let's also read in the mapping file
 
 ```{r}
-read_step <- read_step %>% left_join(run_map, by = "id") %>% left_join(metadata, by = "sample_barcode")
-read_step <- read_step %>% mutate(pass = ifelse(X12.Subsampling_97 == "/","No","Yes"))
-read_step %>% count(pass, sample_type)
+# join reads per step with run info and sample metadata
+read_summary <-
+  read_step %>% left_join(run_map, by = "id") %>% left_join(metadata, by = "sample_barcode")
+
+read_summary <-
+  read_summary %>% mutate(pass = ifelse(X12.Subsampling_97 == "/", "Fail", "Pass"))
+
+read_summary <-
+  read_summary %>% count(pass, sample_type) %>% pivot_wider(names_from = pass, values_from = n) %>% arrange(desc(Fail))
+
+sum(read_summary$Fail, na.rm = T)
+sum(read_summary$Pass, na.rm = T)
+
+
+# write out summary of samples passing pipeline
+write.csv(read_summary,"outputs/samples_passing_pipeline.csv")
 
 ```
 
