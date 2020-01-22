@@ -99,33 +99,54 @@ unique(marine$site_code) %>% as.character()
 ```
 
 
-# 16S Data Overview
+### 16S Data Quality Overview - Reads per step
 
-Before we read in the whole dataset, let's look at the reads per step to see how read attrition looks in the pipeline.
+Before we read in the whole ASV table, let's look at the reads per step to see how read attrition looks in the pipeline.
+If read attrition is very high for a certain step, we might need to adjust pipeline parameters.
+For example, high attrition at the 'ESV' step indicates poor read pairing. 
+Adjusting trimming and mismatch requirements could help with this
+
+Alternatively, losing a lot of reads at the taxa filter step indicates problems with host amplification.
+The only way to recover these samples is to lower the subsampling threshold. 
+
+It's important to note that sequencing id is the unique identifier for a sequenced sample.
+Sample barcode is the unique id for the collected sample. Collected samples can be sequenced multiple times.
+A given sample barcode may be associated with multiple sequencing ids. 
+
+We'll read in the full mapping file. The mapping file has all sample collection metadata.
+We can join the mapping file with the run map based on sample barcode.
+With this information, we can break down reads per step by sample type. 
 
 ```{r}
+
+# run map pairs barcode reads with unique sequencing id, run info, and primer info. 
 file_run_map <- "../../data/raw/st_miseq04_mapping_file - run_map.csv"
 run_map <- read.csv(file_run_map, header = T, colClasses = "character")
+run_map[1] <- as.numeric(run_map[[1]])
+
 
 file_read_step <- "../../data/interim/sequences_per_sample_per_step_97.tsv"
 read_step <- read.table(file_read_step, sep = "\t",header = T)
-read_step <- apply(read_step, 2, function(x) sub(" \\((.+) uniques\\)","",x)) %>% as.data.frame(stringsAsFactors=F)
-
+read_step <- apply(read_step, 2, function(x) sub(" \\((.+) uniques\\)","",x))
+read_step <- apply(read_step[], 2, function(x) as.numeric(x)) %>% as.data.frame()
 colnames(read_step)[1] <- "id"
+# join reads per step with run info and sample metadata
+read_step <-
+  read_step %>% left_join(run_map, by = "id") %>% left_join(metadata, by = "sample_barcode")
 
+# read_step now contains run info, reads per step for each sequencing id, and sample metadata.
 read_step
 
 ```
 
-Let's also read in the mapping file
+### Summarize reads per step by sample type
+It looks like most read attrition is happening at the taxa filtering step.
+Probably, this is an issue with host amplification.
+
 
 ```{r}
-# join reads per step with run info and sample metadata
 read_summary <-
-  read_step %>% left_join(run_map, by = "id") %>% left_join(metadata, by = "sample_barcode")
-
-read_summary <-
-  read_summary %>% mutate(pass = ifelse(X12.Subsampling_97 == "/", "Fail", "Pass"))
+  read_step %>% mutate(pass = ifelse(is.na(X12.Subsampling_97), "Fail", "Pass"))
 
 read_summary <-
   read_summary %>% count(pass, sample_type) %>% pivot_wider(names_from = pass, values_from = n) %>% arrange(desc(Fail))
@@ -133,9 +154,39 @@ read_summary <-
 sum(read_summary$Fail, na.rm = T)
 sum(read_summary$Pass, na.rm = T)
 
+read_summary
 
 # write out summary of samples passing pipeline
 write.csv(read_summary,"outputs/samples_passing_pipeline.csv")
 
 ```
 
+### Adjust sub-sampling
+As expected, most of the failed samples are plants, presumably because of high host chloroplast amplification rates. 
+There are still reads in these samples, but we'll need to adjust subsampling if we want to include these samples.
+Let's check the plant reads to determine optimal subsampling
+
+
+```{r}
+# histogram plant samples
+plants <- read_step %>% filter(sample_type %in% c("PlantShoot","PlantRoot"))
+plants$X10.TaxaFilter_97[plants$X10.TaxaFilter_97 < 5000] %>% as.numeric() %>% hist(breaks = 20, main = "Plant samples under 5000 reads")
+
+# count samples kept based on different cut off levels
+
+cut_check <- data.frame()
+
+for (cutoff in c(0,2000,2500,3000,3400,3500,3700,4000)) {
+cuts <- read_step %>% group_by(sample_type) %>% filter(X10.TaxaFilter_97 > cutoff)
+cuts <- mutate(cuts, Cutoff = cutoff)
+
+cut_check <- rbind.data.frame(cut_check, cuts)
+
+}
+
+cut_check %>% group_by(Cutoff, sample_type) %>% count() %>% pivot_wider(names_from = Cutoff, values_from = n)
+
+```
+
+So it looks like plant shoots are not going to work out. Almost all of the samples have <2000 reads after taxa filtering.
+Plant roots look okay, though. If we cut off at 
