@@ -158,6 +158,7 @@ read_summary
 
 # write out summary of samples passing pipeline
 write.csv(read_summary,"outputs/samples_passing_pipeline.csv")
+write.csv(read_step, "outputs/reads_per_step_w_meta.csv")
 
 ```
 
@@ -189,4 +190,29 @@ cut_check %>% group_by(Cutoff, sample_type) %>% count() %>% pivot_wider(names_fr
 ```
 
 So it looks like plant shoots are not going to work out. Almost all of the samples have <2000 reads after taxa filtering.
-Plant roots look okay, though. If we cut off at 
+Plant roots look okay. If we cut off at 3700, we keep 5 more samples than at 4000 and only lose 3 samples compared to 3000 (2 of which are plant shoots, which will be excluded)
+
+## Import Pipeline Outputs (taxonomy, metadata, ESV table)
+
+```{r}
+# source scripts for cleaning pipeline output and making phyloseq object
+source("src/clean_and_query_16S.R")
+source("src/make_phyloseq.R")
+
+
+ST_16S <- clean_16S_tables(abundance_file = "../../data/interim/abundance_table_97.shared",
+                  taxonomy_file = "../../data/interim/annotations_97.taxonomy",
+                 metadata_file = "../../data/raw/st_miseq04_mapping_file - mapping_new.csv",
+                 description = "ST_16S_Miseq04")
+
+head(ST_16S$abundance)
+head(ST_16S$taxonomy)
+head(ST_16S$metadata)
+
+ST_16S_phy <- make_phyloseq(ST_16S)
+
+
+
+```
+
+
