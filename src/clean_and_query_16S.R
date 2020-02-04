@@ -7,7 +7,8 @@
 clean_16S_tables <- function(abundance_file = "Miseq01/abundance_0.03.relabund",
                              taxonomy_file  = "Miseq01/consensus_0.03.taxonomy",
                              metadata_file  = "Miseq01/Miseq1MappingFile.csv",
-                             description    = "Miseq01"){
+                             description    = "Miseq01",
+                             output_dir = "./"){
   
   # Requirements
   require(dplyr)
@@ -42,9 +43,8 @@ clean_16S_tables <- function(abundance_file = "Miseq01/abundance_0.03.relabund",
   abund <- read.table( abundance_file, header = T, stringsAsFactors = F )
   tax   <- read.table( taxonomy_file, header = T, stringsAsFactors = F )
 
-  # read in metadata as characters
+  # read in metadata as
   fullmeta  <- read.table( metadata_file, header = T, stringsAsFactors = F,
-                      colClasses = "character",
                       sep = "," )
   ## Clean tables
   # Clean taxonomy table:
@@ -88,7 +88,7 @@ clean_16S_tables <- function(abundance_file = "Miseq01/abundance_0.03.relabund",
   # Write out all tables as .csv and return a "result" list of tables
   lapply(1:length(result),
          function(x) write.csv(result[[x]],
-                               file = paste(description, names(result[x]), "table.csv", sep = "_"),
+                               file = paste(output_dir,"/",description, "_", names(result[x]),"_", "table.csv", sep = ""),
                                row.names = F))
   # write message
   message(paste("tables written out as csv files starting with ", description, "...", sep = ""))

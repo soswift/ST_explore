@@ -1,0 +1,229 @@
+---
+title: "ST_diversity"
+author: "Sean Swift"
+date: "January 30, 2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+### Import sequencing data into phyloseq for visualization
+
+```{r seq data}
+
+library(phyloseq)
+library(dplyr)
+library(ggplot2)
+# Following https://joey711.github.io/phyloseq/plot_richness-examples.html
+
+# source the function 'make_phyloseq' because I don't always remember the syntax
+setwd("~/Documents/Bioinformatics/Projects/SuperTransect/Analysis/exploration/R_notebook/")
+
+source("src/make_phyloseq.R")
+ST_16S <- readRDS("data/processed/cleaned/ST_16S.rds")
+
+ST_16S_phy <- make_phyloseq(ST_16S)
+
+
+# Add in our new spatial metadata (also remove controls)
+# set rownames and update the phyloseq object
+spatial_meta <- readRDS("data/interim/field_meta.rds")
+
+rownames(spatial_meta) <- spatial_meta[[1]]
+spatial_meta<- spatial_meta[-1]
+
+# add correct levels for transects
+spatial_meta$transect_name %>% unique
+transect_levels <- c(
+  "Marine" ,
+  "STEstuary",
+  "STGardens",
+  "STFalls",
+  "STAboveFalls",
+  "STDrumRoadMakai",
+  "STDrumRoadMauka",
+  "STSummit"
+  )
+
+  
+spatial_meta$transect_name <- factor(spatial_meta$transect_name, levels = transect_levels )
+
+sample_data(ST_16S_phy) <- spatial_meta
+
+
+
+```
+
+## Check sample totals again
+Some samples were lost to the pipeline. Also, looks like we're missing marine water samples...
+The only marine samples that are in the library correspond to the samples sent for MS analysis.
+
+```{r}
+## Actual sample replication across sample types
+
+# Marine samples
+ST_16S$metadata %>% filter(site_type == "Core Waimea") %>% group_by(sample_type) %>% summarise(count = n())
+
+# Terrestrial samples
+ST_16S$metadata %>% filter(site_type ==  "Transect") %>% group_by(sample_type) %>% summarise(count = n())
+
+```
+## Typical host site
+Transect Start/Middle/End Sites. 0m, 400m, 800m.
+note: distance btwn start of one transect and end of previous transect not uniform
+```{r}
+ST_16S$metadata %>% filter(site_type == "Transect", site_name == "STGardens9") %>% group_by(site_name, sample_type) %>% summarise(sample_counts = n())
+
+```
+
+## Typical environmental site
+Transect 'filler' sites. Sites at 100m, 200m, 300m, 500m, 600m, 700m.
+These were sampled for environmental samples (water, soil, sediment), but not hosts.
+note: mosquitoes are scattered around unevenly, same with drosophila, so they might pop up sometimes
+
+```{r}
+ST_16S$metadata %>% filter(site_type == "Transect", site_name == "STGardens2") %>% group_by(site_name, sample_type) %>% summarise(sample_counts = n())
+```
+
+### Phyloseq Plots
+
+First, set up the ggplot theme
+
+```{r ggplot}
+# set up ggplot
+theme_set(theme_bw())
+pal = "Set1"
+scale_colour_discrete <-  function(palname=pal, ...){
+  scale_colour_brewer(palette=palname, ...)
+}
+scale_fill_discrete <-  function(palname=pal, ...){
+  scale_fill_brewer(palette=palname, ...)
+}
+```
+
+
+### Host vs. Non-host Alpha Diversity
+Some plots showing differential diversity in hosts vs. environmenatl samples by habitat.
+Marine hosts tend to have diversity more on par with environmental samples.
+
+
+```{r host diversity}
+# Shannon by host type, colored by habitat
+p <- plot_richness(ST_16S_phy, x = "host", measures ="Shannon", title = "Shannon Diversity By Host Type", color = "habitat")
+p$layers <- p$layers[-1]
+p + geom_point(size=1, alpha=0.7, position = "jitter")
+
+# Observed by host type, colored by habitat
+p <- plot_richness(ST_16S_phy, x = "host", measures ="Observed", title = "Observed Diversity By Host Type", color = "habitat")
+p$layers <- p$layers[-c(1:2)]
+p + geom_point(size=1, alpha=0.7, position = "jitter")
+
+
+```
+
+### Alpha-Diversity along Gradient: by sample type
+Looking for trends in alpha diversity along the whole transect .
+The x-axis for these plots is the variable "shore_dist" (see ST_2_spatial.rmd), which is distance from the beach (river mouth).
+"site_order" will also indicate distance from shore, but by rank instead of distance.
+
+
+```{r gradient diversity}
+
+# get rid of empty taxa
+# get rid of plant shoots
+# subset to just include terrestrial samples
+
+ST  <- prune_taxa(taxa_sums(ST_16S_phy) > 0, ST_16S_phy)
+ST  <- subset_samples(ST, habitat != "Marine")
+ST  <- subset_samples(ST, sample_type != "PlantShoot")
+plot_richness(ST, x = "sample_type", measures = "Shannon", title = "Alpha Diversity By Sample Type")
+
+# plot alpha diversity along the gradient by sample type
+sample_data(ST) %>% .$sample_type %>% unique()
+
+# Host samples
+ST_plant <- ST_plant <- subset_samples(ST, sample_type == "PlantRoot")
+plot_richness(ST_plant, x = "shore_dist", measures ="Shannon", title = "PlantRoot Alpha Diversity")
+rm(ST_plant)
+
+ST_dros <- ST_dros <- subset_samples(ST, sample_type == "Drosophila")
+plot_richness(ST_dros, x = "shore_dist", measures ="Shannon", title = "Drosophila Alpha Diversity")
+rm(ST_dros)
+
+ST_mos <- ST_mos <- subset_samples(ST, sample_type == "Mosquito")
+plot_richness(ST_mos, x = "shore_dist", measures ="Shannon", title = "Mosquito Alpha Diversity")
+rm(ST_mos)
+
+# Environmental samples
+ST_sed <- subset_samples(ST, sample_type == "Sediment")
+plot_richness(ST_sed, x = "shore_dist", measures ="Shannon", title = "Sediment Alpha Diversity")
+rm(ST_sed)
+
+ST_soil <- subset_samples(ST, sample_type %in% c( "SoilShallow","SoilDeep"))
+plot_richness(ST_soil, x = "shore_dist", measures ="Shannon", title = "Soil Alpha Diversity", color = "sample_type")
+rm(ST_soil)
+
+ST_water <- subset_samples(ST, sample_type == "WaterNonSaline")
+plot_richness(ST_water, x = "shore_dist", measures ="Shannon", title = "WaterNonSaline Alpha Diversity")
+rm(ST_water)
+
+# plot alpha diversity along the gradient for all sample types along the transect
+p <-  plot_richness(ST, x= "site_order", measures = c("Shannon"), title = "Transect Samples Alpha Diversity", color = "sample_type")
+p
+
+```
+### Alpha diversity grouped by transect
+Are some transects more diverse than others?
+For this approach, merge OTUs by each sampling site (water+soil+sediment).
+If samples aren't merged at each site, differences in diversity between sample types wipe out any trend. 
+Boxplot for each transect (1 = Estuary, 7 = Summit).
+
+Spoiler: Shannon diversity increases below the waterfall
+
+
+```{r}
+
+## Environmental Samples (taken every 100m)
+# plot total alpha diversity, merging environmental samples at each sample site
+ST_env <- subset_samples(ST, host == "Nonhost")
+ST_env@sam_data$sample_type %>% unique()
+
+# merge by site (i.e. soil, water, sediment, treated as one sample)
+ST_envGroup <- suppressWarnings(merge_samples(ST_env, group = "site_order"))
+sample_data(ST_envGroup)$transect_name <- factor(sample_data(ST_envGroup)$transect_name)
+
+# group by transect and make boxplot
+p <-plot_richness(ST_envGroup, x= "transect_name", measures = c("Shannon"), title = "Environmental Samples Shanon Diversity By Transect")
+p + geom_boxplot()
+
+p <-plot_richness(ST_envGroup, x = "transect_name", measures = c("Observed"), title = "Environmental Samples Observed Diversity By Transect")
+p + geom_boxplot() + labs(x= "Transect")
+
+
+## Plant Samples (taken every 400m, although start and end of transects are closer)
+ST_plant <- subset_samples(ST, sample_type == "PlantRoot")
+p <-plot_richness(ST_plant, x= "transect_name", measures = c("Shannon"), title = "Plant Roots Shanon Diversity By Transect")
+p+geom_boxplot()
+rm(ST_plant)
+
+```
+
+### Taxa shifts across the gradient
+
+Are bacterial taxa changing in abundance across the gradient?
+Pull out the most common orders to look at (top 20).
+Start checking for patterns. Maybe wrap all of this in a function to speed things up. 
+
+```{r}
+# top 20 orders
+order.sum <- tapply(taxa_sums(ST), tax_table(ST)[, "order"], sum, na.rm = T)
+top20 <- sort(order.sum, TRUE)[1:20]
+top20
+
+
+# Check Acidobacteriales since they are mostly in soil and they sound susceptible to pH
+ST_acido <-subset_taxa(ST, order == "Acidobacteriales")
+plot_bar(ST_acido, x="sample_type",title = "Acidobacteriales Abundance By Sample Type")
+plot_bar(ST_acido , x="shore_dist",title = "Acidobacteriales Abundance By Distance From The Beach")
+```
+

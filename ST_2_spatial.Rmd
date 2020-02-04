@@ -1,0 +1,157 @@
+---
+title: "ST_2_spatial"
+author: "Sean Swift"
+date: "January 30, 2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Spatial analyses
+
+## Pulling out spatial data from rasters
+We have GPS coordinates for each sample. There are freely available raster data sets for environmental variables (elevation, rainfall, temp).
+Using the sample coordinates, pull out these environmental variables and join them to the sample metadata
+```{r import}
+library(raster)
+library(ggplot2)
+library(dplyr)
+library(rgdal)
+library(geosphere)
+library(vegan)
+#read in data
+
+ST_16S <- readRDS("data/processed/cleaned/ST_16S.rds")
+
+
+## select just samples that were collected in the field and have lat long (no controls)
+
+field_meta <- ST_16S$metadata %>% filter(!is.na(lat) & !is.na(long))
+
+
+```
+
+### Rainfall
+
+```{r rainfall}
+# rasters are yearly averages, and can be
+# found at rainfall atlas of hawaii and evapotranspiration hawaii
+# http://rainfall.geography.hawaii.edu/rainfall.html
+#Extract data from rasters using sampling coordinates
+
+set_proj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
+
+
+#use annual rainfall txt file to make raster
+
+oahu_rainfall <- raster("data/raw/spatial/rfgrid_mm_oahu_ann.txt", crs = set_proj)
+oahu_rainfall
+
+# extract values
+field_meta$rainfall <-  raster::extract(x = oahu_rainfall,
+                        y = field_meta[c("long","lat")],
+                        df = TRUE)[[2]]
+
+
+
+#makes raster map of oahu
+plot(oahu_rainfall, main="Annual Rainfall Oahu")
+points(x=field_meta$long, y=field_meta$lat, pch=20, col="black", cex=1)
+points(x=field_meta$long, y=field_meta$lat, pch=20, col="white", cex=0.4)
+
+
+```
+
+### Elevation
+
+```{r elevation}
+# source: http://www.soest.hawaii.edu/coasts/data/hawaii/dem.html
+#  Code to correct project for raw raster. Takes a lot of resources to run. 
+ oahu_elevation <- raster("data/raw/spatial/oahu_dem/w001001.adf")
+ oahu_elevation <- projectRaster(oahu_elevation, crs = set_proj)
+# saveRDS(oahu_elevation,"data/interim/oahu_elev_raster.RDS")
+
+# oahu_elevation <- readRDS("data/interim/oahu_elev_raster.RDS")
+oahu_elevation
+
+# extract values
+field_meta$elevation <-  raster::extract(x = oahu_elevation,
+                        y = field_meta[c("long","lat")],
+                        df = TRUE)[[2]]
+
+
+plot(oahu_elevation)
+points(x=field_meta$long, y=field_meta$lat, pch=20, col="black", cex=1)
+points(x=field_meta$long, y=field_meta$lat, pch=20, col="white", cex=0.4)
+
+```
+
+
+### C-CAP
+
+```{r}
+
+# ccap <- raster("data/raw/spatial/CCAP/hi_oahu_2011_ccap_hr_land_cover20140619.img")
+# 
+# # need to change projection, but process is taking a long time
+# 
+# #ccap <- projectRaster(ccap, crs = set_proj)
+# 
+# ccap
+# 
+# 
+# plot(ccap)
+
+```
+
+### Distance from shore for each site
+Anthony suggests organizing the gradient by distance from shore, which varies colinearly with precipitation, elevation, etc.
+
+```{r distance shore}
+# Choose arbitrary point on shore
+
+shore <- c(-158.063539,21.640629)
+
+# Calculate distance for each sample
+
+field_meta$shore_dist <- geosphere::distGeo(shore, field_meta[c("long","lat")])
+
+# Show colinearity of rainfall, elevation, distance from shore
+
+
+plot(
+  field_meta$site_order,
+  field_meta$shore_dist,
+  col = "red",
+  pch = 20,
+  xlab = "Sampling Site",
+  ylab = "Value",
+  main = "Variation in Distance, Rainfall, and Elevation"
+  )
+  
+  points(field_meta$site_order,
+  field_meta$rainfall,
+  col = "blue",
+  pch = 20)
+  
+  points(field_meta$site_order,
+  field_meta$elevation,
+  col = "green",
+  pch = 20)
+  
+  legend(
+  x = 0,
+  y = 10000,
+  c("Distance from shore", "Rainfall", "Elevation"),
+  col = c("red", "blue", "green"),
+  pch = 20
+  )
+
+  # write to an r file
+  saveRDS(field_meta,"data/interim/field_meta.rds")
+```
+
+
+
+
+
