@@ -12,6 +12,16 @@ output:
 ## Pulling out spatial data from rasters
 We have GPS coordinates for each sample. There are freely available raster data sets for environmental variables (elevation, rainfall, temp).
 Using the sample coordinates, pull out these environmental variables and join them to the sample metadata
+```{r libraries echo = FALSE}
+library(raster)
+library(ggplot2)
+library(dplyr)
+library(rgdal)
+library(geosphere)
+library(vegan)
+```
+
+
 ```{r import}
 library(raster)
 library(ggplot2)
@@ -25,7 +35,6 @@ ST_16S <- readRDS("data/processed/cleaned/ST_16S.rds")
 
 
 ## select just samples that were collected in the field and have lat long (no controls)
-
 field_meta <- ST_16S$metadata %>% filter(!is.na(lat) & !is.na(long))
 
 
@@ -147,11 +156,60 @@ plot(
   pch = 20
   )
 
-  # write to an r file
-  saveRDS(field_meta,"data/interim/field_meta.rds")
+  
+
+
+
 ```
 
+### Update metadata to include spatial data
 
+```{r}
+# add lab samples back in
+lab_samples <- ST_16S$metadata[!(ST_16S$metadata$id %in% field_meta$id),]
+
+# set all spatial data to NA
+lab_samples$rainfall   <- NA
+lab_samples$elevation  <- NA
+lab_samples$shore_dist <- NA
+
+
+
+# check that columns match
+all_equal(colnames(field_meta), colnames(lab_samples))
+
+# bind together
+metadata <- rbind(field_meta,lab_samples)
+metadata <- metadata[ match(ST_16S$metadata$id, metadata$id), ]
+
+# add in correct levels for transect names
+metadata$transect_name %>% unique
+transect_levels <- c(
+  "Marine" ,
+  "STEstuary",
+  "STGardens",
+  "STFalls",
+  "STAboveFalls",
+  "STDrumRoadMakai",
+  "STDrumRoadMauka",
+  "STSummit",
+  "NA"
+  )
+
+  
+metadata$transect_name <- factor(metadata$transect_name, levels = transect_levels )
+
+# check that all the samples made it in the right order
+all_equal(metadata$id, ST_16S$metadata$id)
+
+# update ST_16S list of dataframes
+ST_16S$metadata <- metadata
+
+
+# write to an r file
+saveRDS(ST_16S,"data/processed/cleaned/ST_16S_spatial.rds")
+
+```
 
 
 
