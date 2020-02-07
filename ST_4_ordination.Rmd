@@ -1,0 +1,170 @@
+---
+title: "ST_4_ordination"
+author: "Sean Swift"
+date: "February 6, 2020"
+output: 
+  html_document:
+        toc: true
+        toc_depth: 4
+---
+
+##### Description
+ST_ordination focuses on plots related to ordination based on community dissimilarity.
+Ordination plots are accompanied by heat maps, when possible.
+These ordinations often require data transformation, so there's some of that too. 
+Mostly using package phyloseq. Also using speedyseq when available.
+
+TODO: 
+
+  * Re-do ordinations with unifrac. Figure out best way to import unifrac or recalculate with phyloseq. Never had ITS trees...
+  * Make some heatmaps
+  * Other types of ordination
+  * Mantel test
+
+### Import data and create phyloseq object
+Here are some commments about what I'm doing that will look real nice
+Reading in data
+
+```{r setup}
+library(phyloseq)
+library(viridisLite)
+library(speedyseq)
+library(ggplot2)
+
+
+source("src/make_phyloseq.R")
+ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
+
+ST_16S_phy <- make_phyloseq(ST_16S)
+
+
+```
+
+
+### Set up ggplot
+```{r ggplot}
+theme_set(theme_bw())
+pal = "viridis"
+scale_colour_discrete <-  function(palname=pal, ...){
+  scale_color_viridis_d(option = palname)
+}
+scale_fill_discrete <-  function(palname=pal, ...){
+  scale_fill_viridis_d(option = palname)
+}
+scale_colour_continuous <-  function(palname=pal, ...){
+  scale_color_viridis_c(option = palname)
+}
+
+scale_fill_continuous <-  function(palname=pal, ...){
+  scale_fill_viridis_c(option = palname)
+}
+```
+
+
+### Do some broad strokes ordination
+
+#### All Samples
+To start, NMDS of all samples, all OTUs (no additional filtering), bray curtis dissimilarity. 
+
+```{r allNMDS}
+# It's faster to save and read in the ordination object
+# To re-generate ordination run the following: 
+# ST.ord <- ordinate(ST_16S_phy, "NMDS", "bray")
+#saveRDS(ST.ord,"data/interim/ST.ord.rds")
+
+# by habitat
+ST.ord <-readRDS("data/interim/ST.ord.rds")
+p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Bray Curtis, All Samples, All OTUs")
+p
+
+
+```
+
+Next, subset to just the transect samples (no marine samples)
+
+```{r transectNMDS}
+# transform to relative abundance
+ST_rel <-transform_sample_counts(ST_16S_phy, function(x) x / sum(x) )
+
+# subset to just transect samples
+ST  <- subset_samples(ST_rel, habitat != "Marine")
+ST  <- subset_samples(ST, sample_type != "PlantShoot")
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+
+
+# ordinate
+ST.ord <- invisible(ordinate(ST, "NMDS", "bray"))
+p = plot_ordination(ST, ST.ord, type="samples", color = "sample_type", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
+p
+
+
+```
+#### Ordinate By Host
+
+```{r hostNMDS}
+# loop through and ordinate all host types
+
+host_types <- unique(ST@sam_data$host)
+for ( type in host_types ){
+  # subset and ordinate
+  ST_sub <- subset_samples(ST, host == type)
+  ST.ord <- invisible(ordinate(ST_sub, "NMDS", "bray"))
+  
+  #plot
+  p = plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
+  print(p)
+}
+
+
+```
+
+#### Ordinations by sample type
+Subset to just samples from the transect.
+NMDS ordinations colored by distance from shore (shore_dist) show some patterns for environmental samples (Soil, sediment, water).
+Possibly some patterns in plant roots, which likely reflect soil patterns.
+
+For mosquitos and drosophila, patterns are less obvious.
+
+```{r samplesNMDS, echo = F}
+# loop through and ordinate all sample types
+
+sample_types <- unique(ST@sam_data$sample_type)
+for ( type in sample_types ){
+  # subset and ordinate
+  ST_sub <- subset_samples(ST, sample_type == type)
+  ST.ord <- invisible(ordinate(ST_sub, "NMDS", "bray"))
+  
+  #plot
+  p = plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", title= paste("NMDS, Bray Curtis,",type))
+  print(p)
+}
+
+
+```
+
+
+### Merging: Summing OTUs at family level for export/heatmaps
+Summing OTUs at the family level is recommended for producing readable heatmaps.
+First, transform the otu abundance to relative abundance, then sum. 
+
+```{r famMerge}
+# transform to relative abundance
+
+ST_rel     = transform_sample_counts(ST_16S_phy, function(x) x / sum(x) )
+
+# sum at family level
+ST_famglom <- speedyseq::tax_glom(ST_rel, "family")
+
+# check
+ntaxa(ST_rel)
+ntaxa(ST_famglom)
+
+```
+
+### TODO Make some heatmaps without crashing R
+
+```{r heatmaps}
+#speedyseq::plot_heatmap(test,method = "NMDS", distance = "bray", sample.label =  "habitat", taxa.label = "family")
+```
+
