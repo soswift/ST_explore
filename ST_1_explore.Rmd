@@ -2,7 +2,10 @@
 title: "ST_1_explore"
 author: "Sean Swift"
 date: "January 30, 2020"
-output: html_document
+output: html_document:
+        toc: true
+        toc_depth: 4
+        number_sections: true
 ---
 
 # Supertransect
@@ -15,7 +18,7 @@ Each sample was duplicated for DNA extraction and metabolomics.
 This R markdown is for checking the metadata, importing 16S pipeline outputs, and exporting cleaned data.
 
 
-## Metadata Overview
+# Metadata Overview
 Here's a quick breakdown of the metadata columns:
 
 **sample_barcode** is the unique identifier for each sample.

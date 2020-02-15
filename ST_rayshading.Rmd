@@ -1,0 +1,217 @@
+---
+output:
+  html_document:
+    df_print: paged
+---
+
+# Rayshader Attempt
+
+Here we'll try to make 3D maps for fun data visualization!
+
+To start, install the "leaflet" package.
+
+To get rayshader on a mac, you will need to download and install XQuartz (xquartz.org).
+Then, install the "rgl" package. Then carry out these lines:
+
+install.packages("devtools")
+devtools::install_github("tylermorganwall/rayshader")
+
+### read in points
+ 
+ 
+```{r}
+sample_data <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
+
+coords <- sample_data$metadata[c("long","lat")]
+
+plot(coords)
+```
+ 
+
+
+### Step 1 - Bounding Box
+
+Create a bounding box for the desired area (Waimea). The leaflet package will display it on a map
+
+```{r}
+library(rayshader)
+library(leaflet)
+
+# define bounding box with longitude/latitude coordinates
+bbox <- list(
+  p1 = list(long = -158.086249, lat = 21.588450),
+  p2 = list(long = -157.949029, lat = 21.662884)
+)
+
+leaflet() %>%
+  addTiles() %>% 
+  addRectangles(
+    lng1 = bbox$p1$long, lat1 = bbox$p1$lat,
+    lng2 = bbox$p2$long, lat2 = bbox$p2$lat,
+    fillColor = "transparent"
+  ) %>%
+  fitBounds(
+    lng1 = bbox$p1$long, lat1 = bbox$p1$lat,
+    lng2 = bbox$p2$long, lat2 = bbox$p2$lat
+  )
+```
+
+### Step 2 - Define Image Size
+
+There are 2 requirements:
+1. The image dimensions need to match our bounding box coordinates (i.e have the same aspect ratio)
+2. The image dimensions of the elevation data and the map overlay need to match exactly (i.e. produce the same size arrays)
+
+We are using custom functions from Will Bishop (wcmbishop on Github).
+
+```{r}
+#the function
+define_image_size <- function(bbox, major_dim = 400) {
+  # calculate aspect ration (width/height) from lat/long bounding box
+  aspect_ratio <- abs((bbox$p1$long - bbox$p2$long) / (bbox$p1$lat - bbox$p2$lat))
+  # define dimensions
+  img_width <- ifelse(aspect_ratio > 1, major_dim, major_dim*aspect_ratio) %>% round()
+  img_height <- ifelse(aspect_ratio < 1, major_dim, major_dim/aspect_ratio) %>% round()
+  size_str <- paste(img_width, img_height, sep = ",")
+  list(height = img_height, width = img_width, size = size_str)
+}
+
+#our data
+image_size <- define_image_size(bbox, major_dim = 600)
+
+```
+
+### Step 3 - Download Elevation Data
+
+Using another custom function, pull elevation data from the USGS National Map tool API
+
+```{r}
+#the function
+get_usgs_elevation_data <- function(bbox, size = "400,400", file = NULL, 
+                                    sr_bbox = 4326, sr_image = 4326) {
+  require(httr)
+  
+  # TODO - validate inputs
+  
+  url <- parse_url("https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage")
+  res <- GET(
+    url, 
+    query = list(
+      bbox = paste(bbox$p1$long, bbox$p1$lat, bbox$p2$long, bbox$p2$lat,
+                   sep = ","),
+      bboxSR = sr_bbox,
+      imageSR = sr_image,
+      size = size,
+      format = "tiff",
+      pixelType = "F32",
+      noDataInterpretation = "esriNoDataMatchAny",
+      interpolation = "+RSP_BilinearInterpolation",
+      f = "json"
+    )
+  )
+  
+  if (status_code(res) == 200) {
+    body <- content(res, type = "application/json")
+    # TODO - check that bbox values are correct
+    # message(jsonlite::toJSON(body, auto_unbox = TRUE, pretty = TRUE))
+    
+    img_res <- GET(body$href)
+    img_bin <- content(img_res, "raw")
+    if (is.null(file)) 
+      file <- tempfile("elev_matrix", fileext = ".tif")
+    writeBin(img_bin, file)
+    message(paste("image saved to file:", file))
+  } else {
+    warning(res)
+  }
+  invisible(file)
+}
+
+# download elevation data
+elev_file <- file.path("data/raw/", "sf-elevation.tif")
+get_usgs_elevation_data(bbox, size = image_size$size, file = elev_file,
+                        sr_bbox = 4326, sr_image = 4326)
+
+```
+
+### Step 4 - Plot the Map!
+
+First, read the elevation data (.tif file) using another function.
+Then, use rayshader code to calculate data layers and build a 2D plot.
+
+```{r}
+# load elevation data
+elev_img <- raster::raster(elev_file)
+elev_matrix <- matrix(
+  raster::extract(elev_img, raster::extent(elev_img), buffer = 1000), 
+  nrow = ncol(elev_img), ncol = nrow(elev_img)
+)
+
+# calculate rayshader layers
+ambmat <- ambient_shade(elev_matrix, zscale = 30)
+raymat <- ray_shade(elev_matrix, zscale = 30, lambert = TRUE)
+watermap <- detect_water(elev_matrix)
+
+# plot 2D
+elev_matrix %>%
+  sphere_shade(texture = "imhof4") %>%
+  add_water(watermap, color = "imhof4") %>%
+  add_shadow(raymat, max_darken = 0.5) %>%
+  add_shadow(ambmat, max_darken = 0.5) %>%
+  plot_map()
+
+
+```
+
+
+
+### Step 6b - 3D Ma
+
+Increasing alphalayer in add_overlay makes overlay darker (less transparent)
+In plot_3d:
+theta refers to left/right rotation about z axis
+phi refers to how steep a view you get
+fov is the field of view (default is isometric)
+
+```{r}
+# coordinates function
+find_image_coordinates <- function(long, lat, bbox, image_width, image_height) {
+  x_img <- round(image_width * (long - min(bbox$p1$long, bbox$p2$long)) / abs(bbox$p1$long - bbox$p2$long))
+  y_img <- round(image_height * (lat - min(bbox$p1$lat, bbox$p2$lat)) / abs(bbox$p1$lat - bbox$p2$lat))
+  list(x = x_img, y = y_img)
+}
+
+# define label
+
+
+
+coords_list <- apply(coords,1, FUN = function(x){ 
+                    pos <- find_image_coordinates(
+                    long = x[1], lat = x[2] , bbox = bbox,
+                    image_width = image_size$width, image_height = image_size$height)
+                    return(pos)
+                  }
+
+)
+
+zscale <- 10
+rgl::clear3d()
+elev_matrix %>% 
+  sphere_shade(texture = "imhof1") %>% 
+  add_water(watermap, color = "imhof1") %>%
+  add_shadow(raymat, max_darken = 0.5) %>%
+  add_shadow(ambmat, max_darken = 0.5) %>%
+  plot_3d(elev_matrix, zscale = zscale, windowsize = c(1200, 1000),
+          water = TRUE, wateralpha = 0.5,
+          theta = -120, phi = 20, zoom = 0.65, fov = 0)
+ 
+render_label(elev_matrix, x = coords_list$`1`$x, y = coords_list$`1`$y, z = 3000, zscale = 50, text = "test",
+              textsize = 2, linewidth = 5, alpha = 0.5, linecolor = "darkred")
+Sys.sleep(0.2)
+render_label(elev_matrix, x = coords_list$`2`$x, y = coords_list$`2`$y, z = 3000, zscale = 50,
+             text = "test", textsize = 2, linewidth = 5, alpha = 0.5, linecolor = "darkred")
+
+Sys.sleep(0.2)
+render_snapshot()
+```
+

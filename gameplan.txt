@@ -1,0 +1,41 @@
+SuperTransect
+Hypotheses, Questions, and Methods
+
+1) Bacteria vary along the distance gradient
+
+	A) for each evironmental sample type, changes in the community are correlated with the gradient.
+
+	Method1: NMDS on Unifrac/Bray-Curtis distances. Show correlation between NMDS axis 1 and shore_dist
+	Method2: Mantel test of distances with physical distance
+
+	Question1: Are there other confounding variables that would also explain this pattern?
+	Question2: Is this variation linear along shore_dist?  
+
+	B) Within environmental sample types, specific OTUs change in abundance along the gradient, which drives the change in communities
+
+	Method1: Fit linear models to each OTU where abundance is predicted by shore_dist. Transform abundance into z-scores to make coefficients comparable across OTUs. Also transform shore_dist into z-scores to allow for regression. Issues include very tiny coefficients due to z-score transformation and false positives due to violation of assumptions and lots of tests.
+	Method2: Fit generalized additive models to each OTU where abundance is predicted by shore_dist. GAMS can fit non-linear models and can be compared to linear models to see if they perform significantly better. GAMS can be configured to handle zero-inflated data sets, which makes them well suited to OTU abundance data.
+	Method3: Pull out specific OTUs predicted to be significantly correlated with the gradient with high model fit and high abundance. Come up with plausible explanation for variation.
+
+	Question1: What is the most appropriate model for this?
+	Question2: How should I transform the model coefficients for volcano plots? 
+
+ 	C) For each animal host sample type, changes in communities and OTU abundance are not correlated with the gradient. 
+	Method1: NMDS as above
+	Method2: Linear models as above
+
+	D) Plant root communities overlap with soil, but are detectably different. Changes in community are correlated with the gradient, but maybe not for plant specific OTUs.
+	Method1: Compare plant root communities to soil communities. What's the best way?
+	Method2: subset OTUs found in plant roots, but not environmental samples. Use linear models to test if these OTUs are correlated with shore_dist
+
+2) Summit and Estuary are unique/extreme and have their own communities for each environmental sample type.
+	A)  Sites that are not Estuary or Summit are pretty similar.
+	Method1: Not sure how to show this. Venn diagrams? Something better?
+
+	B) There is no difference between sites below the waterfall and above the waterfall.
+	Method1: Compare two transects above garden (Above Falls & Drum Road Makai vs. Falls & Garden)
+
+
+
+
+

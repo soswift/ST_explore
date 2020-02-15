@@ -3,13 +3,18 @@ title: "ST_2_spatial"
 author: "Sean Swift"
 date: "January 30, 2020"
 output:
-  html_document: default
-  pdf_document: default
+  html_document:
+        toc: true
+        toc_depth: 4
+        number_sections: true
 ---
 
-# Spatial analyses
 
-## Pulling out spatial data from rasters
+# Description
+ST_Spatial focuses on importing raster data, some visualization of the rasters, and extraction of rater data by sampling location.
+Raster data is then added to the sample metadata for downstream analyses. 
+
+# Pulling out spatial data from rasters
 We have GPS coordinates for each sample. There are freely available raster data sets for environmental variables (elevation, rainfall, temp).
 Using the sample coordinates, pull out these environmental variables and join them to the sample metadata
 ```{r libraries echo = FALSE}
@@ -21,6 +26,8 @@ library(geosphere)
 library(vegan)
 ```
 
+## Set up
+Import sample and run metadata
 
 ```{r import}
 library(raster)
@@ -97,6 +104,8 @@ points(x=field_meta$long, y=field_meta$lat, pch=20, col="white", cex=0.4)
 
 
 ### C-CAP
+C-CAP is very high resolution and takes a long time to proccess.
+Until this is deemed immediately useful I will wait to include it.
 
 ```{r}
 
@@ -162,7 +171,7 @@ plot(
 
 ```
 
-### Update metadata to include spatial data
+### Update metadata to include spatial data and remove suspect sample
 
 ```{r}
 # add lab samples back in
@@ -172,7 +181,6 @@ lab_samples <- ST_16S$metadata[!(ST_16S$metadata$id %in% field_meta$id),]
 lab_samples$rainfall   <- NA
 lab_samples$elevation  <- NA
 lab_samples$shore_dist <- NA
-
 
 
 # check that columns match
@@ -202,14 +210,22 @@ metadata$transect_name <- factor(metadata$transect_name, levels = transect_level
 # check that all the samples made it in the right order
 all_equal(metadata$id, ST_16S$metadata$id)
 
+# Remove suspect sample 105464, which should be sediment, but clusters with mosquito samples
+metadata <- metadata[metadata$sample_id != 105464,]
+
+
 # update ST_16S list of dataframes
 ST_16S$metadata <- metadata
-
+ST_16S$abundance <- ST_16S$abundance[ST_16S$abundance$Group != 105464,]
 
 # write to an r file
 saveRDS(ST_16S,"data/processed/cleaned/ST_16S_spatial.rds")
 
 ```
 
+## Plot Elevation Profile
 
+```{r}
+
+```
 

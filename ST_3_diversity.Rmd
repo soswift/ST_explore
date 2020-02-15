@@ -3,9 +3,12 @@ title: "ST_diversity"
 author: "Sean Swift"
 date: "January 30, 2020"
 output:
-  html_document: default
+  html_document:
+        toc: true
+        toc_depth: 4
+        number_sections: true
 ---
-##### Description
+# Description
 ST_diversity focuses on plots related to alpha diversity.
 Special attention is given to variation in alpha diversity along the gradient. 
 Often, this these plots will be broken down by sample type.
@@ -27,6 +30,8 @@ source("src/make_phyloseq.R")
 ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
 
 ST_16S_phy <- make_phyloseq(ST_16S)
+
+
 
 
 
@@ -113,7 +118,7 @@ p + geom_point(size=1, alpha=0.7, position = "jitter")
 # Observed by host type, colored by habitat
 p <- plot_richness(ST_16S_phy, x = "host", measures ="Observed", title = "Observed Diversity By Host Type", color = "habitat")
 p$layers <- p$layers[-c(1:2)]
-p + geom_point(size=1, alpha=0.7, position = "jitter")
+p + geom_point(size=1, alpha=0.7, position = "jitter",na.rm = F)
 
 
 ```

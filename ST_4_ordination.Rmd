@@ -6,9 +6,11 @@ output:
   html_document:
         toc: true
         toc_depth: 4
+        number_sections: true
+
 ---
 
-##### Description
+# Description
 ST_ordination focuses on plots related to ordination based on community dissimilarity.
 Ordination plots are accompanied by heat maps, when possible.
 These ordinations often require data transformation, so there's some of that too. 
@@ -16,20 +18,25 @@ Mostly using package phyloseq. Also using speedyseq when available.
 
 TODO: 
 
-  * Re-do ordinations with unifrac. Figure out best way to import unifrac or recalculate with phyloseq. Never had ITS trees...
-  * Make some heatmaps
-  * Other types of ordination
+  * Re-do ordinations with unifrac. To get tree and re-calculate, will need to re-pipeline the data.
+  * Make heatmaps
+  * Other types of ordination?
   * Mantel test
+  * pull out the bugs responsible for each of the strong spatial gradients (this is just anecdotal at this point). 
+  * make similar plots to those in ST_model with the subset axis 1 nmds values (probably within each sample type). Visualize bugs that have the strongest slopes and most significant slopes with NMDS Axis 1, which will be the “drivers” of that aspect of the ordination in each case.
 
-### Import data and create phyloseq object
-Here are some commments about what I'm doing that will look real nice
+
+# Setup
+## Import data and create phyloseq object
 Reading in data
+
 
 ```{r setup}
 library(phyloseq)
 library(viridisLite)
 library(speedyseq)
 library(ggplot2)
+library(dplyr)
 
 
 source("src/make_phyloseq.R")
@@ -38,53 +45,135 @@ ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
 ST_16S_phy <- make_phyloseq(ST_16S)
 
 
+
 ```
 
 
-### Set up ggplot
+## Read in unifrac distances
+Distances are saved as a lower triangular matrix.
+Need to import, arrange, mirror, and convert to distance matrix.
+
+```{r import_unifrac}
+# Read in unifrac distances
+x <- scan("data/raw/sequence/all_unifrac_97.unweighted.dist")
+x <- x[-1]
+
+# make empty matrix
+m <- matrix(NA, 474,474)
+
+# fill lower triangle
+m[upper.tri(m, diag = F)] <- x
+
+# pull out sample names
+samp_names <- m[1,2:ncol(m)] %>% as.integer()
+
+# delete from matrix
+m <- m[-1,-1]
+
+# add diagonal 
+diag(m) <- signif(0.00, digits =4)
+
+# fill out matrix
+makeSymm <- function(m) {
+   m[lower.tri(m)] <- t(m)[lower.tri(m)]
+   return(m)
+}
+m <- makeSymm(m)
+
+# add sample names back in
+colnames(m) <- samp_names
+row.names(m) <- samp_names
+
+rm(x)
+
+# function for subsetting the distance matrix
+get_unifrac <- function(physeq, unifrac_matrix = m){
+  # subsets unifrac matrix columns and rows by set of ids
+  ids <- sample_names(physeq)
+  if( ! ( all ( ids %in% colnames( unifrac_matrix )))){
+    warning("Not all ids are in the distance matrix")
+    print(ids[! ( ids %in% colnames(unifrac_matrix) ) ])
+  } else {
+  dist <- as.dist(unifrac_matrix[ids,ids])
+  return(dist)
+  }
+}
+
+
+
+```
+
+## Set up ggplot
 ```{r ggplot}
 theme_set(theme_bw())
-pal = "viridis"
-scale_colour_discrete <-  function(palname=pal, ...){
-  scale_color_viridis_d(option = palname)
+pal_c = "RdYlBu"
+pal_d = "Dark2"
+scale_colour_discrete <-  function(palname=pal_d, ...){
+  scale_colour_brewer(palette=palname, ...)
 }
-scale_fill_discrete <-  function(palname=pal, ...){
-  scale_fill_viridis_d(option = palname)
-}
-scale_colour_continuous <-  function(palname=pal, ...){
-  scale_color_viridis_c(option = palname)
+scale_fill_discrete <-  function(palname=pal_d, ...){
+    scale_fill_brewer(palette=palname, ...)
 }
 
-scale_fill_continuous <-  function(palname=pal, ...){
-  scale_fill_viridis_c(option = palname)
-}
+# Can change these settings with viridis package
+# With colour brewer, need add a line to each plot for continuous colors
+# "scale_color_gradient2(low = "green", mid = "blue", high = "red")"
+
+#  scale_colour_continuous <-  function(palname=pal_c, ...){
+#    scale_colour_brewer(palette=palname, ...)
+#  }
+# # 
+#  scale_fill_continuous <-  function(palname=pal_c, ...){
+#    scale_fill_brewer(palette=palname, ...)
+#  }
+
 ```
 
 
-### Do some broad strokes ordination
+# NMDS
 
-#### All Samples
+## Do some broad strokes ordination
+
+### All Samples
 To start, NMDS of all samples, all OTUs (no additional filtering), bray curtis dissimilarity. 
 
-```{r allNMDS}
+```{r allNMDS, echo = F, message=F, results='hide'}
 # It's faster to save and read in the ordination object
-# To re-generate ordination run the following: 
-# ST.ord <- ordinate(ST_16S_phy, "NMDS", "bray")
+# To generate Bray Curtis ordination run the following: 
+
+ST.uni <- get_unifrac(ST_16S_phy)
+
+ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
 #saveRDS(ST.ord,"data/interim/ST.ord.rds")
 
+# To generate Unifrac ordination run the following
+
+#ST.ord <- ordinate(ST_16S_phy)
+
+
+
 # by habitat
-ST.ord <-readRDS("data/interim/ST.ord.rds")
-p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Bray Curtis, All Samples, All OTUs")
-p
+#ST.ord <-readRDS("data/interim/ST.ord.rds")
+p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="Habitat/Host: NMDS, Bray, All Samples, All OTUs")
+p + scale_shape_discrete(solid = F)
 
+# by transect
 
+p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "transect_name", shape = "host", title="Transect/Host NMDS, Bray Curtis, All Samples, All OTUs")
+p + scale_shape_discrete(solid = F)
+
+rm(ST.ord)
 ```
 
-Next, subset to just the transect samples (no marine samples)
+### Transect Samples
+Take a closer look at transect samples (no marine samples).
 
-```{r transectNMDS}
+
+```{r transectNMDS, echo = F, message=F, results='hide'}
 # transform to relative abundance
 ST_rel <-transform_sample_counts(ST_16S_phy, function(x) x / sum(x) )
+
+rm(ST_16S_phy)
 
 # subset to just transect samples
 ST  <- subset_samples(ST_rel, habitat != "Marine")
@@ -94,54 +183,130 @@ ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 
 
 # ordinate
-ST.ord <- invisible(ordinate(ST, "NMDS", "bray"))
+ST.uni <- get_unifrac(ST)
+ST.ord <- ordinate(ST, "NMDS", ST.uni)
+
+# by sample
 p = plot_ordination(ST, ST.ord, type="samples", color = "sample_type", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
-p
+p + scale_shape_discrete(solid = F) 
 
+# by transect
+p = plot_ordination(ST, ST.ord, type="samples", color = "transect_name", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
+p + scale_shape_discrete(solid = F) 
 
+rm(ST.ord)
+rm(ST.uni)
 ```
-#### Ordinate By Host
+#### Separate Ordinations By Host Type
 
-```{r hostNMDS}
+```{r hostNMDS, echo = F, message=F, results='hide'}
 # loop through and ordinate all host types
 
 host_types <- unique(ST@sam_data$host)
 for ( type in host_types ){
   # subset and ordinate
   ST_sub <- subset_samples(ST, host == type)
+  ST.uni <- get_unifrac(ST_sub)
   ST.ord <- invisible(ordinate(ST_sub, "NMDS", "bray"))
   
   #plot
-  p = plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
+  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
+  p <- p +
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") +
+    scale_shape_discrete(solid = F)
+    
   print(p)
 }
 
 
 ```
 
-#### Ordinations by sample type
+#### Separate Ordinations By Sample Type
 Subset to just samples from the transect.
 NMDS ordinations colored by distance from shore (shore_dist) show some patterns for environmental samples (Soil, sediment, water).
 Possibly some patterns in plant roots, which likely reflect soil patterns.
 
 For mosquitos and drosophila, patterns are less obvious.
 
-```{r samplesNMDS, echo = F}
-# loop through and ordinate all sample types
+```{r samplesNMDS, echo = F, message=F, results='hide'}
+# initialize empty dataframe to store ordination values
+ST_sample_ords <-data.frame(MDS1 = numeric(),MDS2 = numeric(), sample_type = character())
+
+# loop through and ordinate each sample types
 
 sample_types <- unique(ST@sam_data$sample_type)
+
 for ( type in sample_types ){
   # subset and ordinate
   ST_sub <- subset_samples(ST, sample_type == type)
-  ST.ord <- invisible(ordinate(ST_sub, "NMDS", "bray"))
+  ST.uni <- get_unifrac(ST_sub)
+  ST.ord <- ordinate(ST_sub, "NMDS", ST.uni)
+  
+  # pull out MDS1, MDS2, sample type
+  MDS <- as.data.frame(ST.ord$points)
+  # test for significant relationship
+  mod1  <- lm(MDS$MDS1 ~ ST_sub@sam_data$shore_dist)
+  r_sq  <- summary(mod1)$r.squared
+  p_val <- summary(mod1)$coefficients[2,4]
+  # plot MDS1 against shore_dist
+  plot(
+    ST_sub@sam_data$shore_dist,
+    MDS$MDS1,
+    main = type,
+    sub = paste("R^2 = ", round(r_sq, 3), "p =", p_val)
+    )
+  abline(mod1)
+  
+  # rest
+  Sys.sleep(0.5)
   
   #plot
-  p = plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", title= paste("NMDS, Bray Curtis,",type))
+  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
+  p <- p +
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
+    scale_shape_discrete(solid = F)
+
   print(p)
 }
 
 
+
+
 ```
+
+
+
+
+
+### Ordinate for each transect for a given host
+This turned out to not be very informative. 
+The goal was to see if NMDS pulled out smaller scale spatial patterns.
+Problem is, there are not many data points in each transect.
+
+
+```{r}
+ST_nonhost  <- subset_samples(ST, host=="Nonhost")
+transect_names <- unique(ST@sam_data$transect_name) %>% as.character()
+
+# TODO figure out how to assign unique color scales to each plot in loop
+## Loop through 
+for ( trans in transect_names ){
+  # subset and ordinate
+  ST_sub <- subset_samples(ST_nonhost, transect_name == trans)
+  min_dist <- min(ST_sub@sam_data$shore_dist)
+  max_dist <- max(ST_sub@sam_data$shore_dist)
+  ST.ord <- ordinate(ST_sub, "NMDS", "bray")
+  
+  #plot
+  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis,",trans))
+  p <- p  + 
+    scale_shape_discrete(solid=F)
+  print(p)
+
+}
+```
+
+
 
 
 ### Merging: Summing OTUs at family level for export/heatmaps
@@ -149,22 +314,19 @@ Summing OTUs at the family level is recommended for producing readable heatmaps.
 First, transform the otu abundance to relative abundance, then sum. 
 
 ```{r famMerge}
-# transform to relative abundance
-
-ST_rel     = transform_sample_counts(ST_16S_phy, function(x) x / sum(x) )
-
 # sum at family level
-ST_famglom <- speedyseq::tax_glom(ST_rel, "family")
-
-# check
-ntaxa(ST_rel)
-ntaxa(ST_famglom)
+# ST_famglom <- speedyseq::tax_glom(ST_rel, "family")
+# 
+# # check
+# ntaxa(ST_rel)
+# ntaxa(ST_famglom)
 
 ```
 
-### TODO Make some heatmaps without crashing R
+### Heatmaps
 
 ```{r heatmaps}
+# TODO figure out how to run heatmaps without crashing R. 
 #speedyseq::plot_heatmap(test,method = "NMDS", distance = "bray", sample.label =  "habitat", taxa.label = "family")
 ```
 
