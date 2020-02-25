@@ -51,26 +51,28 @@ ST  <- subset_samples(ST_16S_phy, habitat != "Marine")
 ST  <- subset_samples(ST, sample_type != "PlantShoot")
 ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 
-# transform to relative abundance
-#ST_rel <-transform_sample_counts(ST, function(x) x / sum(x) )
+
 
 ```
 
 
-## Set up the model
+## Set up the models
 To get started, define a function that generates linear models (lm) for each otu.
-Currently, the model takes zscore of otu abundance as X and zscore of distance from shore as Y.
+
 
 OTUs and values for X are pulled from a phyloseq object.
 The model coefficients (intercept and slope) and summary coefficients (probablilities, errors, etc.) are stored in a data frame.
 
 Might switch this over to manylm function in mvabund or gamlss for better (more complicated) model fitting.
 
-```{r model, warning=TRUE}
+### Z score models
+This function generates linear models on the zscore of otu abundance as X and zscore of distance from shore as Y.
+
+```{r zmodel, warning=TRUE}
 # define a function to run linear models, output model coefficients, summary, and relative abundance
 # function will also transform both dependent and independent variable to z-scores
 
-get_z_models <- function(physeq, variable = "shore_dist", raw_abund) {
+get_z_models <- function(physeq, variable = "shore_dist") {
   ## Testing:
    # variable = "shore_dist"
    # physeq = ST
@@ -126,6 +128,68 @@ get_z_models <- function(physeq, variable = "shore_dist", raw_abund) {
 
 ```
 
+### arcsin square root model
+This function generates linear models using the arcsin square root transformed otu relative abundance as X and distance from shore as Y.
+
+```{r arcmodel}
+
+# define a function to run linear models, output model coefficients, summary, and relative abundance
+# function will also transform both dependent and independent variable to z-scores
+
+get_arc_models <- function(physeq, variable = "shore_dist") {
+  ## Testing:
+  #  variable = "shore_dist"
+  #  physeq = ST
+  # 
+  # pull out variable from sample data
+  shore_dist <- physeq@sam_data[[variable]] %>% as.vector
+  
+  # Pull out otu abundance and otu relative abundance (across samples)
+  physeq_rel <- transform_sample_counts(physeq, function(x) x / sum(x) )
+  abund      <- otu_table(physeq) %>%  as.data.frame()
+  rel_abund  <- otu_table(physeq_rel) %>% as.data.frame()
+  # apply model to each otu
+  probs <- apply(rel_abund, 1, function(x.row) {
+          #TESTING: 
+          # x.row = abund[1200,] %>% unlist()
+          # *** MODEL DEFINITION ***
+          mod1 <- lm(asin(sqrt(x.row)) ~ shore_dist)
+          ####################################
+          
+          sum1 <- summary(mod1)
+          
+          append(sum1$coefficients, sum1$r.squared)
+          
+          
+          }) %>%
+          t() %>%
+          as.data.frame()
+  # set column names for model outputs
+  colnames(probs) <-
+  c(
+  "intercept",
+  "int_err",
+  "int_t_value",
+  "int_p",
+  "slope",
+  "slope_err",
+  "slope_t_value",
+  "slope_p",
+  "r.squared"
+  )
+  # add otu names as a column
+  probs$otu <- row.names(abund)
+  # add otu relative abundance as a column
+  probs$rel_abund <- rowSums(abund)/sum(rowSums(abund))
+  
+  # list otu abundance table and model information
+  output <- list(probs,abund)
+  names(output) <- c("models","abundance")
+  return(output)
+}
+
+```
+
 ## Linear models : Look for abundant OTUs that change a lot
 Having run the model, how many OTUs show up as significantly associated with distance from shore?
 How many of those OTUs also vary in their abundance (slope of the linear regression)?
@@ -139,7 +203,7 @@ To answer these questions, define functions for two types of "volcano" plots:
 Plots include a vertical line at p = 0.001
 
 ```{r plots}
-# Plot 1
+# Plot 1: P vs Slope
 # define a function to plot p value of otu slope vs the actual slope coefficient
 plot_pval_vs_slope <- function(got_models, description)
 {
@@ -147,9 +211,9 @@ plot_pval_vs_slope <- function(got_models, description)
     x = got_models$models$slope,
     y = -log10(got_models$models$slope_p),
     
-    main = paste(description, ": P value shore_dist slope vs. shore_dist slope"),
+    main = paste(description, ": P value of model vs. slope coefficient"),
     xlab = "shore_dist slope",
-    ylab = "p value shore_dist slope (-log10)",
+    ylab = "p value (-log10)",
   
     pch = 1,
     col = "darkblue"
@@ -157,7 +221,7 @@ plot_pval_vs_slope <- function(got_models, description)
   abline(h = -log10(0.05))
 }
 
-# Plot 2
+# Plot 2: P vs Rel Abund
 # define a function to plot p value of otu slope vs the relative abundance of the OTU
 plot_pval_vs_RA <- function(got_models, description, physeq)
 {
@@ -165,9 +229,9 @@ plot_pval_vs_RA <- function(got_models, description, physeq)
     x = got_models$models$rel_abund,
     y = -log10(got_models$models$slope_p),
     
-    main = paste(description, ": P value shore_dist slope vs. relative abundance"),
+    main = paste(description, ": P value of model vs. relative abundance of OTU"),
     xlab = "relative abundance of OTU in data",
-    ylab = "p value shore_dist slope (-log10)",
+    ylab = "p value (-log10)",
     
     pch = 1,
     col = "darkred"
@@ -182,21 +246,28 @@ Probably, running these models on all samples together will not be very informat
 ```{r allsamples}
 
 # run linear model on all OTUs across all samples (phyloseq object "ST")
-p_all_samples <- get_z_models(physeq = ST, variable = "shore_dist")
+p_all_samples_z <- get_z_models(physeq = ST, variable = "shore_dist")
+p_all_samples_arc <-get_arc_models(physeq = ST, variable = "shore_dist")
+
 
 # how many otus have a tiny p value?
-length(p_all_samples$models$slope_p[  p_all_samples$models$slope_p < 0.05  ] )
+length(p_all_samples_z$models$slope_p[  p_all_samples_z$models$slope_p < 0.05  ] )
 
 # plot 1
-plot_pval_vs_slope(p_all_samples, "Samples")
+plot_pval_vs_slope(p_all_samples_z, "All samples, zscore")
+plot_pval_vs_slope(p_all_samples_arc, "All samples, arcsin(sqrt)")
+
 
 # plot 2
-plot_pval_vs_RA(p_all_samples, "Samples")
+plot_pval_vs_RA(p_all_samples_z, "All samples, zscore")
+plot_pval_vs_RA(p_all_samples_arc,"All samples, arcsin(sqrt)")
 ```
 
-### Linear models : Subset Soil And Sediment Samples
-Soil samples were collected at every transect site.
+### Linear models : Subset Soil
+Soil samples were collected at every transect site. Soil communities appear to vary linearly with the transect gradient.
 Any good candidate OTUs varying across the gradient?
+
+#### Soil
 
 ```{r soil}
 # All soil samples
@@ -206,17 +277,20 @@ ST_soil <- subset_samples(ST, sample_type %in% c( "SoilShallow","SoilDeep"))
 ST_soil <- prune_taxa(taxa_sums(ST_soil) > 0, ST_soil)
 
 # run linear model on all OTUs across all samples (phyloseq object "ST")
-p_soil <- get_z_models(physeq = ST_soil, variable = "shore_dist")
+p_soil_z   <- get_z_models(physeq = ST_soil, variable = "shore_dist")
+p_soil_arc <- get_arc_models(physeq = ST_soil, variable = "shore_dist")
 rm(ST_soil)
 
 # how many otus have a tiny p value?
-length(p_soil$models$slope_p[  p_soil$models$slope_p < 0.001  ] )
+length(p_soil_z$models$slope_p[  p_soil_z$models$slope_p < 0.001  ] )
 
 # plot 1
-plot_pval_vs_slope(p_soil, "Soil")
-
+plot_pval_vs_slope(p_soil_z, "Soil")
+plot_pval_vs_slope(p_soil_arc, "Soil")
 # plot 2
-plot_pval_vs_RA(p_soil, "Soil")
+plot_pval_vs_RA(p_soil_z, "Soil")
+plot_pval_vs_RA(p_soil_arc, "Soil")
+
 
 #####################################
 
@@ -227,18 +301,25 @@ ST_shal_soil <- subset_samples(ST, sample_type %in% c( "SoilShallow"))
 ST_shal_soil <- prune_taxa(taxa_sums(ST_shal_soil) > 0, ST_shal_soil)
 
 # run linear model on all OTUs across all samples (phyloseq object "ST")
-p_shal_soil <- get_z_models(physeq = ST_shal_soil, variable = "shore_dist")
+p_shal_soil_z <- get_z_models(physeq = ST_shal_soil, variable = "shore_dist")
+p_shal_soil_arc <- get_arc_models(physeq = ST_shal_soil, variable = "shore_dist")
 
 # how many otus have a tiny p value?
-length(p_shal_soil$models$slope_p[  p_shal_soil$models$slope_p < 0.001  ] )
+length(p_shal_soil_z$models$slope_p[  p_shal_soil_z$models$slope_p < 0.001  ] )
 
 # plot 1
-plot_pval_vs_slope(p_shal_soil, "Shallow Soil")
+plot_pval_vs_slope(p_shal_soil_z, "Shallow Soil, zscore")
+plot_pval_vs_slope(p_shal_soil_arc, "Shallow Soil, arcsin(sqrt)")
 
 # plot 2
-plot_pval_vs_RA(p_shal_soil, "Shallow Soil")
+plot_pval_vs_RA(p_shal_soil_z, "Shallow Soil, zscore")
+plot_pval_vs_RA(p_shal_soil_arc, "Shallow Soil, arcsin(sqrt)")
 
-#####################################
+```
+
+### Linear models : Subset Sediment
+
+```{r sediment}
 # Sediment Samples
 
 # Subset data to just soil samples

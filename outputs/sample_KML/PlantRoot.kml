@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="PlantRoot" id="PlantRoot">
+	<SimpleField name="long" type="float"></SimpleField>
+	<SimpleField name="lat" type="float"></SimpleField>
+	<SimpleField name="sample_type" type="string"></SimpleField>
+	<SimpleField name="sample_number" type="int"></SimpleField>
+	<SimpleField name="transect" type="string"></SimpleField>
+</Schema>
+<Folder><name>PlantRoot</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.058586</SimpleData>
+		<SimpleData name="lat">21.63824203</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.058586,21.63824203</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.058562</SimpleData>
+		<SimpleData name="lat">21.63825503</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.058562,21.63825503</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.058546</SimpleData>
+		<SimpleData name="lat">21.63823399</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.058546,21.63823399</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.057654</SimpleData>
+		<SimpleData name="lat">21.63737501</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.057654,21.63737501</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.057643</SimpleData>
+		<SimpleData name="lat">21.63749898</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.057643,21.63749898</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.05759</SimpleData>
+		<SimpleData name="lat">21.63749202</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.05759,21.63749202</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.054904</SimpleData>
+		<SimpleData name="lat">21.635546</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.054904,21.635546</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.054881</SimpleData>
+		<SimpleData name="lat">21.63555203</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.054881,21.63555203</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.054845</SimpleData>
+		<SimpleData name="lat">21.63551196</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.054845,21.63551196</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.052285</SimpleData>
+		<SimpleData name="lat">21.63335304</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.052285,21.63335304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.052154</SimpleData>
+		<SimpleData name="lat">21.63335597</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.052154,21.63335597</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.052089</SimpleData>
+		<SimpleData name="lat">21.63332001</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.052089,21.63332001</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.051123</SimpleData>
+		<SimpleData name="lat">21.63289304</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.051123,21.63289304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.051102</SimpleData>
+		<SimpleData name="lat">21.63303</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.051102,21.63303</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.051065</SimpleData>
+		<SimpleData name="lat">21.63299304</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.051065,21.63299304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.047911</SimpleData>
+		<SimpleData name="lat">21.63102999</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.047911,21.63102999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.044273</SimpleData>
+		<SimpleData name="lat">21.63056597</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.044273,21.63056597</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.042535</SimpleData>
+		<SimpleData name="lat">21.63032801</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.042535,21.63032801</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.039635</SimpleData>
+		<SimpleData name="lat">21.63076999</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.039635,21.63076999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.036846</SimpleData>
+		<SimpleData name="lat">21.62911297</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.036846,21.62911297</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.019156</SimpleData>
+		<SimpleData name="lat">21.62209304</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">3</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.019156,21.62209304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.017351</SimpleData>
+		<SimpleData name="lat">21.62068103</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">3</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.017351,21.62068103</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.015093</SimpleData>
+		<SimpleData name="lat">21.61986002</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">3</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.015093,21.61986002</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.014384</SimpleData>
+		<SimpleData name="lat">21.62018197</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">3</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.014384,21.62018197</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.011175</SimpleData>
+		<SimpleData name="lat">21.62013796</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.011175,21.62013796</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-158.009308</SimpleData>
+		<SimpleData name="lat">21.61748702</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.009308,21.61748702</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-157.9586</SimpleData>
+		<SimpleData name="lat">21.59369297</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">3</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.9586,21.59369297</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantRoot">
+		<SimpleData name="long">-157.95775</SimpleData>
+		<SimpleData name="lat">21.59204501</SimpleData>
+		<SimpleData name="sample_type">PlantRoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.95775,21.59204501</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

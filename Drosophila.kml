@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="site_order" id="site_order">
+	<SimpleField name="long" type="float"></SimpleField>
+	<SimpleField name="lat" type="float"></SimpleField>
+	<SimpleField name="sample_type" type="string"></SimpleField>
+	<SimpleField name="sample_number" type="int"></SimpleField>
+	<SimpleField name="transect" type="string"></SimpleField>
+</Schema>
+<Folder><name>site_order</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.050975</SimpleData>
+		<SimpleData name="lat">21.632815</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">5</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.050975,21.632815</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.04761</SimpleData>
+		<SimpleData name="lat">21.63128799</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.04761,21.63128799</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.042535</SimpleData>
+		<SimpleData name="lat">21.63032801</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">4</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.042535,21.63032801</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.039635</SimpleData>
+		<SimpleData name="lat">21.63076999</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">5</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.039635,21.63076999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.019156</SimpleData>
+		<SimpleData name="lat">21.62209304</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">11</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.019156,21.62209304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.016589</SimpleData>
+		<SimpleData name="lat">21.62005699</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">7</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.016589,21.62005699</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.015093</SimpleData>
+		<SimpleData name="lat">21.61986002</SimpleData>
+		<SimpleData name="sample_type">Drosophila</SimpleData>
+		<SimpleData name="sample_number">5</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.015093,21.61986002</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

@@ -30,12 +30,6 @@ library(vegan)
 Import sample and run metadata
 
 ```{r import}
-library(raster)
-library(ggplot2)
-library(dplyr)
-library(rgdal)
-library(geosphere)
-library(vegan)
 #read in data
 
 ST_16S <- readRDS("data/processed/cleaned/ST_16S.rds")

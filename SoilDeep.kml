@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="site_order" id="site_order">
+	<SimpleField name="long" type="float"></SimpleField>
+	<SimpleField name="lat" type="float"></SimpleField>
+	<SimpleField name="sample_type" type="string"></SimpleField>
+	<SimpleField name="sample_number" type="int"></SimpleField>
+	<SimpleField name="transect" type="string"></SimpleField>
+</Schema>
+<Folder><name>site_order</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.062209</SimpleData>
+		<SimpleData name="lat">21.64104301</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.062209,21.64104301</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.061368</SimpleData>
+		<SimpleData name="lat">21.64049098</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.061368,21.64049098</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.060752</SimpleData>
+		<SimpleData name="lat">21.639674</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.060752,21.639674</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.060384</SimpleData>
+		<SimpleData name="lat">21.63887403</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.060384,21.63887403</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.059519</SimpleData>
+		<SimpleData name="lat">21.63858703</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.059519,21.63858703</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.058617</SimpleData>
+		<SimpleData name="lat">21.63821798</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STEstuary</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.058617,21.63821798</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.058171</SimpleData>
+		<SimpleData name="lat">21.63763602</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.058171,21.63763602</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.057326</SimpleData>
+		<SimpleData name="lat">21.63719002</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.057326,21.63719002</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.056741</SimpleData>
+		<SimpleData name="lat">21.63655903</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.056741,21.63655903</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.055751</SimpleData>
+		<SimpleData name="lat">21.63621102</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.055751,21.63621102</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.054933</SimpleData>
+		<SimpleData name="lat">21.63568899</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.054933,21.63568899</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.054402</SimpleData>
+		<SimpleData name="lat">21.63486999</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.054402,21.63486999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.053857</SimpleData>
+		<SimpleData name="lat">21.63407103</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.053857,21.63407103</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.052984</SimpleData>
+		<SimpleData name="lat">21.63361698</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.052984,21.63361698</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.052043</SimpleData>
+		<SimpleData name="lat">21.63334801</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.052043,21.63334801</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.051186</SimpleData>
+		<SimpleData name="lat">21.63298398</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.051186,21.63298398</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.050406</SimpleData>
+		<SimpleData name="lat">21.63251904</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.050406,21.63251904</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.049687</SimpleData>
+		<SimpleData name="lat">21.63184203</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.049687,21.63184203</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.047911</SimpleData>
+		<SimpleData name="lat">21.63102999</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.047911,21.63102999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.046987</SimpleData>
+		<SimpleData name="lat">21.63095296</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.046987,21.63095296</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.046015</SimpleData>
+		<SimpleData name="lat">21.63090996</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.046015,21.63090996</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.045226</SimpleData>
+		<SimpleData name="lat">21.63051903</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.045226,21.63051903</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.044273</SimpleData>
+		<SimpleData name="lat">21.63056597</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.044273,21.63056597</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.042535</SimpleData>
+		<SimpleData name="lat">21.63032801</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.042535,21.63032801</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.041995</SimpleData>
+		<SimpleData name="lat">21.62954497</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.041995,21.62954497</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.04093</SimpleData>
+		<SimpleData name="lat">21.629377</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.04093,21.629377</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.040342</SimpleData>
+		<SimpleData name="lat">21.63011402</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.040342,21.63011402</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.039635</SimpleData>
+		<SimpleData name="lat">21.63076999</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.039635,21.63076999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.03871</SimpleData>
+		<SimpleData name="lat">21.63110199</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.03871,21.63110199</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.038093</SimpleData>
+		<SimpleData name="lat">21.63038702</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.038093,21.63038702</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.037734</SimpleData>
+		<SimpleData name="lat">21.62945797</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.037734,21.62945797</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.036846</SimpleData>
+		<SimpleData name="lat">21.62911297</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STAboveFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.036846,21.62911297</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.019156</SimpleData>
+		<SimpleData name="lat">21.62209304</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.019156,21.62209304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.01832</SimpleData>
+		<SimpleData name="lat">21.62174402</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.01832,21.62174402</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.01755</SimpleData>
+		<SimpleData name="lat">21.62228297</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.01755,21.62228297</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.017085</SimpleData>
+		<SimpleData name="lat">21.62155199</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.017085,21.62155199</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.016589</SimpleData>
+		<SimpleData name="lat">21.62005699</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.016589,21.62005699</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.015093</SimpleData>
+		<SimpleData name="lat">21.61986002</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMakai</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.015093,21.61986002</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.014384</SimpleData>
+		<SimpleData name="lat">21.62018197</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.014384,21.62018197</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.013361</SimpleData>
+		<SimpleData name="lat">21.62011399</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.013361,21.62011399</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.012875</SimpleData>
+		<SimpleData name="lat">21.61928301</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.012875,21.61928301</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.012184</SimpleData>
+		<SimpleData name="lat">21.61985901</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.012184,21.61985901</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.011175</SimpleData>
+		<SimpleData name="lat">21.62013796</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.011175,21.62013796</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.011013</SimpleData>
+		<SimpleData name="lat">21.61923003</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.011013,21.61923003</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.010097</SimpleData>
+		<SimpleData name="lat">21.61912903</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.010097,21.61912903</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.009737</SimpleData>
+		<SimpleData name="lat">21.61834398</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.009737,21.61834398</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.009308</SimpleData>
+		<SimpleData name="lat">21.61748702</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.009308,21.61748702</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.959275</SimpleData>
+		<SimpleData name="lat">21.59339801</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.959275,21.59339801</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.958825</SimpleData>
+		<SimpleData name="lat">21.59407896</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.958825,21.59407896</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.958602</SimpleData>
+		<SimpleData name="lat">21.59276803</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.958602,21.59276803</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.95775</SimpleData>
+		<SimpleData name="lat">21.59204501</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.95775,21.59204501</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.95767</SimpleData>
+		<SimpleData name="lat">21.59300197</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.95767,21.59300197</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.956808</SimpleData>
+		<SimpleData name="lat">21.59232798</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.956808,21.59232798</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.956065</SimpleData>
+		<SimpleData name="lat">21.59180101</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.956065,21.59180101</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.955948</SimpleData>
+		<SimpleData name="lat">21.59088797</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.955948,21.59088797</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-157.954987</SimpleData>
+		<SimpleData name="lat">21.59049</SimpleData>
+		<SimpleData name="sample_type">SoilDeep</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STSummit</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-157.954987,21.59049</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

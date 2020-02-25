@@ -1,0 +1,39 @@
+---
+title: "ST_6_mapping"
+author: "Sean Swift"
+date: "February 24, 2020"
+output: html_document
+---
+# Read in data and conver to KML for mapping in Google Maps
+
+```{r setup, include=FALSE}
+library(rgdal)
+library(dplyr)
+
+# read in all metadata
+ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
+ST_meta <- ST_16S$metadata
+
+# get rid of lab samples with no gps coords
+ST_meta <- ST_meta[!(is.na(ST_meta$lat)),]
+
+
+ST_summary <-ST_meta %>%
+              group_by(long,lat, sample_type) %>%
+              summarise(sample_number = n(), transect = unique(transect_name))
+
+
+# make a big spatial coordinates data frame
+ST_sp <- SpatialPointsDataFrame(coords = ST_summary[c("long","lat")], data = ST_summary)
+crs(ST_sp) <- "+proj=longlat +datum=WGS84" 
+
+
+# subset by each unique sample type
+
+for(i in unique(ST_sp$sample_type)) {
+  sample_type_sp <- ST_sp[ST_sp$sample_type == i,]
+  writeOGR(sample_type_sp, dsn = paste("outputs/sample_KML/",i, ".kml" ,sep = ""), layer = i, driver = "KML")
+}
+
+
+```

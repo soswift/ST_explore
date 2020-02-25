@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="NegativeControl" id="NegativeControl">
+	<SimpleField name="long" type="float"></SimpleField>
+	<SimpleField name="lat" type="float"></SimpleField>
+	<SimpleField name="sample_type" type="string"></SimpleField>
+	<SimpleField name="sample_number" type="int"></SimpleField>
+	<SimpleField name="transect" type="string"></SimpleField>
+</Schema>
+<Folder><name>NegativeControl</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#NegativeControl">
+		<SimpleData name="long">-158.052043</SimpleData>
+		<SimpleData name="lat">21.63334801</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.052043,21.63334801</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

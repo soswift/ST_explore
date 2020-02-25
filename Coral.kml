@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="site_order" id="site_order">
+	<SimpleField name="long" type="float"></SimpleField>
+	<SimpleField name="lat" type="float"></SimpleField>
+	<SimpleField name="sample_type" type="string"></SimpleField>
+	<SimpleField name="sample_number" type="int"></SimpleField>
+	<SimpleField name="transect" type="string"></SimpleField>
+</Schema>
+<Folder><name>site_order</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.07189</SimpleData>
+		<SimpleData name="lat">21.63677</SimpleData>
+		<SimpleData name="sample_type">Coral</SimpleData>
+		<SimpleData name="sample_number">7</SimpleData>
+		<SimpleData name="transect">Marine</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.07189,21.63677</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.07127</SimpleData>
+		<SimpleData name="lat">21.63892</SimpleData>
+		<SimpleData name="sample_type">Coral</SimpleData>
+		<SimpleData name="sample_number">9</SimpleData>
+		<SimpleData name="transect">Marine</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.07127,21.63892</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.06658</SimpleData>
+		<SimpleData name="lat">21.64499</SimpleData>
+		<SimpleData name="sample_type">Coral</SimpleData>
+		<SimpleData name="sample_number">8</SimpleData>
+		<SimpleData name="transect">Marine</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.06658,21.64499</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.06626</SimpleData>
+		<SimpleData name="lat">21.64272</SimpleData>
+		<SimpleData name="sample_type">Coral</SimpleData>
+		<SimpleData name="sample_number">6</SimpleData>
+		<SimpleData name="transect">Marine</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.06626,21.64272</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#site_order">
+		<SimpleData name="long">-158.06567</SimpleData>
+		<SimpleData name="lat">21.64884</SimpleData>
+		<SimpleData name="sample_type">Coral</SimpleData>
+		<SimpleData name="sample_number">6</SimpleData>
+		<SimpleData name="transect">Marine</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.06567,21.64884</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

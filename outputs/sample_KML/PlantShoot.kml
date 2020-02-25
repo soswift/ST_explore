@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="PlantShoot" id="PlantShoot">
+	<SimpleField name="long" type="float"></SimpleField>
+	<SimpleField name="lat" type="float"></SimpleField>
+	<SimpleField name="sample_type" type="string"></SimpleField>
+	<SimpleField name="sample_number" type="int"></SimpleField>
+	<SimpleField name="transect" type="string"></SimpleField>
+</Schema>
+<Folder><name>PlantShoot</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantShoot">
+		<SimpleData name="long">-158.057643</SimpleData>
+		<SimpleData name="lat">21.63749898</SimpleData>
+		<SimpleData name="sample_type">PlantShoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.057643,21.63749898</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantShoot">
+		<SimpleData name="long">-158.05759</SimpleData>
+		<SimpleData name="lat">21.63749202</SimpleData>
+		<SimpleData name="sample_type">PlantShoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STGardens</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.05759,21.63749202</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantShoot">
+		<SimpleData name="long">-158.051065</SimpleData>
+		<SimpleData name="lat">21.63299304</SimpleData>
+		<SimpleData name="sample_type">PlantShoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.051065,21.63299304</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantShoot">
+		<SimpleData name="long">-158.047911</SimpleData>
+		<SimpleData name="lat">21.63102999</SimpleData>
+		<SimpleData name="sample_type">PlantShoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.047911,21.63102999</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantShoot">
+		<SimpleData name="long">-158.044273</SimpleData>
+		<SimpleData name="lat">21.63056597</SimpleData>
+		<SimpleData name="sample_type">PlantShoot</SimpleData>
+		<SimpleData name="sample_number">1</SimpleData>
+		<SimpleData name="transect">STFalls</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.044273,21.63056597</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#PlantShoot">
+		<SimpleData name="long">-158.011175</SimpleData>
+		<SimpleData name="lat">21.62013796</SimpleData>
+		<SimpleData name="sample_type">PlantShoot</SimpleData>
+		<SimpleData name="sample_number">2</SimpleData>
+		<SimpleData name="transect">STDrumRoadMauka</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-158.011175,21.62013796</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

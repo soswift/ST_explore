@@ -155,12 +155,12 @@ ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
 # by habitat
 #ST.ord <-readRDS("data/interim/ST.ord.rds")
 p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="Habitat/Host: NMDS, Bray, All Samples, All OTUs")
-p + scale_shape_discrete(solid = F)
+p + scale_shape_discrete(solid = T)
 
 # by transect
 
 p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "transect_name", shape = "host", title="Transect/Host NMDS, Bray Curtis, All Samples, All OTUs")
-p + scale_shape_discrete(solid = F)
+p + scale_shape_discrete(solid = T)
 
 rm(ST.ord)
 ```
@@ -188,11 +188,11 @@ ST.ord <- ordinate(ST, "NMDS", ST.uni)
 
 # by sample
 p = plot_ordination(ST, ST.ord, type="samples", color = "sample_type", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
-p + scale_shape_discrete(solid = F) 
+p + scale_shape_discrete(solid = T) 
 
 # by transect
 p = plot_ordination(ST, ST.ord, type="samples", color = "transect_name", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
-p + scale_shape_discrete(solid = F) 
+p + scale_shape_discrete(solid = T) 
 
 rm(ST.ord)
 rm(ST.uni)
@@ -213,7 +213,7 @@ for ( type in host_types ){
   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
   p <- p +
     scale_color_gradient2(low = "green", mid = "blue", high = "red") +
-    scale_shape_discrete(solid = F)
+    scale_shape_discrete(solid = T)
     
   print(p)
 }
@@ -222,11 +222,23 @@ for ( type in host_types ){
 ```
 
 #### Separate Ordinations By Sample Type
-Subset to just samples from the transect.
-NMDS ordinations colored by distance from shore (shore_dist) show some patterns for environmental samples (Soil, sediment, water).
-Possibly some patterns in plant roots, which likely reflect soil patterns.
+Based on the previous ordinations, we can see strong separation between habitats (marine, terrestrial, stream) and hosts (plants, animals, environment). 
 
-For mosquitos and drosophila, patterns are less obvious.
+There also appears to be a strong gradient along the transect for enviromnental samples. For animals, this trend is not very apparent.
+
+Ordinating each sample type separately removes sample type as a source of community variation in the plot.
+Separation along the transect gradient becomes much more obvious for the environmental sample types as well as plant roots.
+
+
+For terrestrial environmental samples (soils and plant roots), correlation between NMDS1 and the gradeint is extremely linear along the transect gradient. For the stream samples (water and sediment), the relationship is relatively linear, with extreme values near to shore. Possibly, there is a salient gradient in the near shore estuary driving more extreme community changes for stream sample types. 
+
+
+Drosophila shows a significant, but weaker trend (both in slope and model fit). 
+Mosquitoes (non-blooded females) show no trend along the gradient. 
+
+Maybe for drosophila, the effects of homeostasis and strictly herbivorous diet result in the weaker trend.
+Mosquitoes are also plant feeders and were sorted to ensure only non-blooded females were collected.
+
 
 ```{r samplesNMDS, echo = F, message=F, results='hide'}
 # initialize empty dataframe to store ordination values
@@ -247,13 +259,17 @@ for ( type in sample_types ){
   # test for significant relationship
   mod1  <- lm(MDS$MDS1 ~ ST_sub@sam_data$shore_dist)
   r_sq  <- summary(mod1)$r.squared
-  p_val <- summary(mod1)$coefficients[2,4]
+  p_val <- signif(summary(mod1)$coefficients[2,4], digits = 3)
   # plot MDS1 against shore_dist
+  par(pty="s")
   plot(
     ST_sub@sam_data$shore_dist,
     MDS$MDS1,
     main = type,
-    sub = paste("R^2 = ", round(r_sq, 3), "p =", p_val)
+    sub = paste("R^2 = ", round(r_sq, 3), "p =", p_val),
+    xlab = "Distance From Shore",
+    ylab = "NMDS Axis 1",
+    pch = 16
     )
   abline(mod1)
   
@@ -264,7 +280,7 @@ for ( type in sample_types ){
   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
   p <- p +
     scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
-    scale_shape_discrete(solid = F)
+    scale_shape_discrete(solid = T)
 
   print(p)
 }
@@ -285,7 +301,7 @@ Problem is, there are not many data points in each transect.
 
 
 ```{r}
-ST_nonhost  <- subset_samples(ST, host=="Nonhost")
+ST_nonhost  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","PlantRoot"))
 transect_names <- unique(ST@sam_data$transect_name) %>% as.character()
 
 # TODO figure out how to assign unique color scales to each plot in loop
@@ -293,14 +309,15 @@ transect_names <- unique(ST@sam_data$transect_name) %>% as.character()
 for ( trans in transect_names ){
   # subset and ordinate
   ST_sub <- subset_samples(ST_nonhost, transect_name == trans)
+  ST.uni <- get_unifrac(ST_sub)
   min_dist <- min(ST_sub@sam_data$shore_dist)
   max_dist <- max(ST_sub@sam_data$shore_dist)
-  ST.ord <- ordinate(ST_sub, "NMDS", "bray")
+  ST.ord <- ordinate(ST_sub, "NMDS", ST.uni)
   
   #plot
   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis,",trans))
   p <- p  + 
-    scale_shape_discrete(solid=F)
+    scale_shape_discrete(solid=T)
   print(p)
 
 }
@@ -308,6 +325,47 @@ for ( trans in transect_names ){
 
 
 
+### Ordinate all soil like samples
+Bacterial communities in soil (deep), soil (shallow), and plant roots all follow an apparently linear trend along the transect gradient. Differences in deep/shallow soil are not detected by ordiation and are fairly intermixed.
+However, plant root communities separate out while following the same gradient trend.
+
+```{r}
+ST_soil  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","PlantRoot"))
+  ST.uni <- get_unifrac(ST_soil)
+  ST.ord <- ordinate(ST_soil, "NMDS", "bray")
+  
+  #plot
+  p <- plot_ordination(ST_soil, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis, Soils, roots"))
+  p <- p  + 
+    scale_shape_discrete(solid=T)+
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") 
+  print(p)
+
+  rm(ST_soil)
+  
+
+```
+
+### Ordinate just the middle sites
+Seems like the separation along the transect gradient is driven by the extremes (Summit and Estuary).
+Ordinations of the middle sites don't really separate out so neatly. 
+
+```{r}
+ST_mid  <- subset_samples(ST, (transect_name %in% c("STFalls","STAboveFalls","STDrumRoadMakai","STGardens") &  sample_type %in% c("SoilDeep","SoilShallow")))
+  ST.uni <- get_unifrac(ST_mid)
+  ST.ord <- ordinate(ST_mid, "NMDS", ST.uni)
+  
+  #plot
+  p <- plot_ordination(ST_mid, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis,"))
+  p <- p  + 
+    scale_shape_discrete(solid=T)+
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") 
+  print(p)
+
+  rm(ST_mid)
+  
+
+```
 
 ### Merging: Summing OTUs at family level for export/heatmaps
 Summing OTUs at the family level is recommended for producing readable heatmaps.
@@ -322,6 +380,10 @@ First, transform the otu abundance to relative abundance, then sum.
 # ntaxa(ST_famglom)
 
 ```
+
+
+
+
 
 ### Heatmaps
 
