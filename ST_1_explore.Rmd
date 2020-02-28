@@ -217,9 +217,9 @@ source("src/clean_and_query_16S.R")
 ## names are checked to make sure they agree between all files
 ## the function writes out each cleaned file as a csv
 
-ST_16S <- clean_16S_tables(abundance_file = "data/raw/sequence/abundance_table_97.shared",
-                  taxonomy_file = "data/raw/sequence/annotations_97.taxonomy",
-                 metadata_file = "data/raw/sample/st_miseq04_mapping_file - run_meta_map.csv",
+ST_16S <- clean_16S_tables(abundance_file = "data/raw/sequence/abundance_table_100.shared",
+                  taxonomy_file = "data/raw/sequence/annotations_100.taxonomy",
+                 metadata_file = "data/raw/sample/SuperTransect_mapping_file.csv",
                  description = "ST_16S_Miseq04",
                  output_dir = "data/processed/cleaned/")
 

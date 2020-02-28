@@ -44,7 +44,9 @@ ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
 
 ST_16S_phy <- make_phyloseq(ST_16S)
 
+# set seed
 
+set.seed(100)
 
 ```
 
@@ -55,7 +57,7 @@ Need to import, arrange, mirror, and convert to distance matrix.
 
 ```{r import_unifrac}
 # Read in unifrac distances
-x <- scan("data/raw/sequence/all_unifrac_97.unweighted.dist")
+x <- scan("data/raw/sequence/all_unifrac_100.weighted.dist")
 x <- x[-1]
 
 # make empty matrix
@@ -135,11 +137,11 @@ scale_fill_discrete <-  function(palname=pal_d, ...){
 ## Do some broad strokes ordination
 
 ### All Samples
-To start, NMDS of all samples, all OTUs (no additional filtering), bray curtis dissimilarity. 
+To start, NMDS of all samples, all OTUs (no additional filtering), Unifrac dissimilarity. 
 
 ```{r allNMDS, echo = F, message=F, results='hide'}
 # It's faster to save and read in the ordination object
-# To generate Bray Curtis ordination run the following: 
+# To generate Unifrac ordination run the following: 
 
 ST.uni <- get_unifrac(ST_16S_phy)
 
@@ -152,32 +154,33 @@ ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
 
 
 
-# by habitat
-#ST.ord <-readRDS("data/interim/ST.ord.rds")
-p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="Habitat/Host: NMDS, Bray, All Samples, All OTUs")
-p + scale_shape_discrete(solid = T)
+#### by habitat
 
-# by transect
+p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="Habitat/Host: NMDS, Bray, All Samples, All OTUs")
+p <- p + scale_shape_discrete(solid = T)
+print(p)
 
-p = plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "transect_name", shape = "host", title="Transect/Host NMDS, Bray Curtis, All Samples, All OTUs")
-p + scale_shape_discrete(solid = T)
+# write to pdf
+pdf("outputs/figures/all_samples_habitat_nmds.pdf",width = 8, height = 6)
+print(p)
+dev.off()
+#### by transect
+
+p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "transect_name", shape = "host", title="Transect/Host NMDS, Unifrac, All Samples, All OTUs")
+p <- p + scale_shape_discrete(solid = T)
+
+print(p)
+
+# write to pdf
+pdf("outputs/figures/all_samples_nmds.pdf",width = 8, height = 6)
+print(p)
+dev.off()
 
 rm(ST.ord)
 ```
-
-### Transect Samples
-Take a closer look at transect samples (no marine samples).
-
-
-```{r transectNMDS, echo = F, message=F, results='hide'}
-# transform to relative abundance
-ST_rel <-transform_sample_counts(ST_16S_phy, function(x) x / sum(x) )
-
-rm(ST_16S_phy)
-
-# subset to just transect samples
-ST  <- subset_samples(ST_rel, habitat != "Marine")
-ST  <- subset_samples(ST, sample_type != "PlantShoot")
+### Just Host Associated
+```{r}
+ST  <- subset_samples(ST_16S_phy, host != "Nonhost")
 ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 
 
@@ -187,11 +190,42 @@ ST.uni <- get_unifrac(ST)
 ST.ord <- ordinate(ST, "NMDS", ST.uni)
 
 # by sample
-p = plot_ordination(ST, ST.ord, type="samples", color = "sample_type", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
+p = plot_ordination(ST, ST.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Unifrac, Transect Samples, All OTUs")
+p + scale_shape_discrete(solid = T) 
+```
+
+
+### Transect Samples
+Take a closer look at transect samples (no marine samples).
+
+
+```{r transectNMDS, echo = F, message=F, results='hide'}
+# transform to relative abundance
+#ST_rel <-transform_sample_counts(ST_16S_phy, function(x) x / sum(x) )
+
+
+# subset to just transect samples
+ST  <- subset_samples(ST_16S_phy, habitat != "Marine")
+ST  <- subset_samples(ST, sample_type != "PlantShoot")
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+#################################################################
+## ST is the phyloseq object containing just transect samples! ##
+#################################################################
+
+# remove full dataset
+rm(ST_16S_phy)
+
+# ordinate
+ST.uni <- get_unifrac(ST)
+ST.ord <- ordinate(ST, "NMDS", ST.uni)
+
+# by sample
+p = plot_ordination(ST, ST.ord, type="samples", color = "sample_type", shape = "host", title="NMDS, Unifrac, Transect Samples, All OTUs")
 p + scale_shape_discrete(solid = T) 
 
 # by transect
-p = plot_ordination(ST, ST.ord, type="samples", color = "transect_name", shape = "host", title="NMDS, Bray Curtis, Transect Samples, All OTUs")
+p = plot_ordination(ST, ST.ord, type="samples", color = "transect_name", shape = "host", title="NMDS, Unifrac, Transect Samples, All OTUs")
 p + scale_shape_discrete(solid = T) 
 
 rm(ST.ord)
@@ -210,7 +244,7 @@ for ( type in host_types ){
   ST.ord <- invisible(ordinate(ST_sub, "NMDS", "bray"))
   
   #plot
-  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
+  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Unifrac,",type))
   p <- p +
     scale_color_gradient2(low = "green", mid = "blue", high = "red") +
     scale_shape_discrete(solid = T)
@@ -248,9 +282,9 @@ ST_sample_ords <-data.frame(MDS1 = numeric(),MDS2 = numeric(), sample_type = cha
 
 sample_types <- unique(ST@sam_data$sample_type)
 
-for ( type in sample_types ){
+for ( i in sample_types ){
   # subset and ordinate
-  ST_sub <- subset_samples(ST, sample_type == type)
+  ST_sub <- subset_samples(ST, sample_type == i)
   ST.uni <- get_unifrac(ST_sub)
   ST.ord <- ordinate(ST_sub, "NMDS", ST.uni)
   
@@ -260,29 +294,63 @@ for ( type in sample_types ){
   mod1  <- lm(MDS$MDS1 ~ ST_sub@sam_data$shore_dist)
   r_sq  <- summary(mod1)$r.squared
   p_val <- signif(summary(mod1)$coefficients[2,4], digits = 3)
-  # plot MDS1 against shore_dist
-  par(pty="s")
-  plot(
-    ST_sub@sam_data$shore_dist,
-    MDS$MDS1,
-    main = type,
-    sub = paste("R^2 = ", round(r_sq, 3), "p =", p_val),
-    xlab = "Distance From Shore",
-    ylab = "NMDS Axis 1",
-    pch = 16
-    )
-  abline(mod1)
+
+ # plot MDS1 against shore_dist
+  
+  # set up dataframe for ggplot scatterplot
+   MDS_cor<-data.frame(shore_dist = ST_sub@sam_data$shore_dist, MDS1 = MDS$MDS1)
+ 
+  # ggplot scatterplot and regression line
+  
+  p <-ggplot(MDS_cor,  aes(shore_dist, MDS1, color = shore_dist)) +
+    geom_point(size = 4) +
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
+    labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val), title = i)+
+    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
+    coord_flip()
+  
+  # if low p value, plot regression line
+  
+  if(  p_val <0.01  ){
+    
+    # if regression is positive, flip the plot and add regresssion line
+    
+    if(mod1$coefficients[2] > 0 ){
+      
+    p <- p+ geom_abline(slope = mod1$coefficients[2]*-1, intercept = mod1$coefficients[1]) + scale_x_reverse()
+      
+    } 
+    
+    # if regression is negative, just add the regression line
+    else
+      {
+    p <- p + geom_abline(slope = mod1$coefficients[2], intercept = mod1$coefficients[1])
+    }
+  } 
+
+  print(p)
+  
+  png(paste("outputs/figures/mds_cor_" , i , ".png", sep = ""), width = 700, height = 600)
+  print(p)
+  dev.off()
   
   # rest
   Sys.sleep(0.5)
   
-  #plot
-  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Bray Curtis,",type))
-  p <- p +
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
-    scale_shape_discrete(solid = T)
+# plot ordination
+  
 
+  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", title= i)
+  p <- p +
+    geom_point(size = 4)+
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
+    scale_shape_discrete(solid = T)+
+    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))
   print(p)
+  
+  png(paste("outputs/figures/nmds_" , i , ".png", sep = ""), width = 800, height = 600)
+  print(p)
+  dev.off()
 }
 
 
@@ -301,26 +369,26 @@ Problem is, there are not many data points in each transect.
 
 
 ```{r}
-ST_nonhost  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","PlantRoot"))
-transect_names <- unique(ST@sam_data$transect_name) %>% as.character()
-
-# TODO figure out how to assign unique color scales to each plot in loop
-## Loop through 
-for ( trans in transect_names ){
-  # subset and ordinate
-  ST_sub <- subset_samples(ST_nonhost, transect_name == trans)
-  ST.uni <- get_unifrac(ST_sub)
-  min_dist <- min(ST_sub@sam_data$shore_dist)
-  max_dist <- max(ST_sub@sam_data$shore_dist)
-  ST.ord <- ordinate(ST_sub, "NMDS", ST.uni)
-  
-  #plot
-  p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis,",trans))
-  p <- p  + 
-    scale_shape_discrete(solid=T)
-  print(p)
-
-}
+# ST_nonhost  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","PlantRoot"))
+# transect_names <- unique(ST@sam_data$transect_name) %>% as.character()
+# 
+# # TODO figure out how to assign unique color scales to each plot in loop
+# ## Loop through 
+# for ( trans in transect_names ){
+#   # subset and ordinate
+#   ST_sub <- subset_samples(ST_nonhost, transect_name == trans)
+#   ST.uni <- get_unifrac(ST_sub)
+#   min_dist <- min(ST_sub@sam_data$shore_dist)
+#   max_dist <- max(ST_sub@sam_data$shore_dist)
+#   ST.ord <- ordinate(ST_sub, "NMDS", ST.uni)
+#   
+#   #plot
+#   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Unifrac,",trans))
+#   p <- p  + 
+#     scale_shape_discrete(solid=T)
+#   print(p)
+# 
+# }
 ```
 
 
@@ -330,19 +398,67 @@ Bacterial communities in soil (deep), soil (shallow), and plant roots all follow
 However, plant root communities separate out while following the same gradient trend.
 
 ```{r}
-ST_soil  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","PlantRoot"))
+ST_soil  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","PlantRoot","Sediment"))
   ST.uni <- get_unifrac(ST_soil)
   ST.ord <- ordinate(ST_soil, "NMDS", "bray")
   
-  #plot
-  p <- plot_ordination(ST_soil, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis, Soils, roots"))
+  # nmds plot shore_dist
+   
+  p <- plot_ordination(ST_soil, ST.ord, type="samples", color = "shore_dist", shape = "sample_type")
   p <- p  + 
     scale_shape_discrete(solid=T)+
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") 
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") +
+    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
+    geom_point(size = 3)+
+    coord_fixed()
   print(p)
-
-  rm(ST_soil)
   
+  # write out
+  ggsave("outputs/figures/soils_etc_dist_nmds.png", width = 10, height = 10)
+   
+  # nmds plot host
+   p <- plot_ordination(ST_soil, ST.ord, type="samples", color = "sample_type", shape = "host")
+    p <- p  + 
+      scale_shape_discrete(solid=T)+
+      theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
+      geom_point(size = 3)+
+      coord_fixed()
+    print(p)
+    
+   # write out
+  ggsave("outputs/figures/soils_etc_host_nmds.png", width = 10, height = 10)
+
+    
+    
+   # corelation plot
+   
+  MDS <- as.data.frame(ST.ord$points)
+  colnames(MDS) <- c("NMDS1","NMDS2")
+  # test for significant relationship
+  mod1  <- lm(MDS$NMDS1 ~ ST_soil@sam_data$shore_dist)
+  r_sq  <- summary(mod1)$r.squared
+  p_val <- signif(summary(mod1)$coefficients[2,4], digits = 3)
+  
+  MDS_cor<-data.frame(shore_dist = ST_soil@sam_data$shore_dist, NMDS1 = MDS$NMDS1)
+
+
+  
+  
+ # Cor plot shore_dist and NMDS1
+  p <- ggplot(MDS_cor,  aes(shore_dist, NMDS1, color = shore_dist)) +
+    geom_point(size=3) +
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
+    geom_abline(slope = mod1$coefficients[2], intercept = mod1$coefficients[1]) +
+    labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val)) +
+    theme(title = element_text(size = 16, face = "bold"),legend.text = element_text(size = 20), axis.text.x = element_blank() ) +
+    coord_flip()
+  print(p)
+  
+  ggsave("outputs/figures/soils_etc_cor.png", width = 10, height = 10)
+
+
+  
+  rm(ST_soil)
 
 ```
 
@@ -351,16 +467,21 @@ Seems like the separation along the transect gradient is driven by the extremes 
 Ordinations of the middle sites don't really separate out so neatly. 
 
 ```{r}
-ST_mid  <- subset_samples(ST, (transect_name %in% c("STFalls","STAboveFalls","STDrumRoadMakai","STGardens") &  sample_type %in% c("SoilDeep","SoilShallow")))
+ST_mid  <- subset_samples(ST, (transect_name %in% c("STDrumRoadMauka","STFalls","STAboveFalls","STDrumRoadMakai","STGardens") &  sample_type %in% c("SoilDeep","SoilShallow","Sediment","PlantRoot")))
   ST.uni <- get_unifrac(ST_mid)
   ST.ord <- ordinate(ST_mid, "NMDS", ST.uni)
   
+  
   #plot
-  p <- plot_ordination(ST_mid, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Nonhost, NMDS, Bray Curtis,"))
+  p <- plot_ordination(ST_mid, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Samples In The Ground, Middle Sites"))
   p <- p  + 
     scale_shape_discrete(solid=T)+
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") 
+    scale_color_gradient2(low = "green", mid = "blue", high = "red") +
+    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
+    geom_point(size = 3)+
+    coord_fixed()
   print(p)
+  ggsave("outputs/figures/middle_sites_nmds.png", width = 10, height = 10)
 
   rm(ST_mid)
   
@@ -373,12 +494,31 @@ First, transform the otu abundance to relative abundance, then sum.
 
 ```{r famMerge}
 # sum at family level
-# ST_famglom <- speedyseq::tax_glom(ST_rel, "family")
+ ST_famglom <- speedyseq::tax_glom(ST, "family")
 # 
 # # check
-# ntaxa(ST_rel)
-# ntaxa(ST_famglom)
+ ntaxa(ST)
+ ntaxa(ST_famglom)
 
+ ST_fam_roots <- subset_samples(ST_famglom, sample_type == "PlantRoot")
+ ST_fam_roots <- prune_taxa(names(sort(taxa_sums(ST_fam_roots),TRUE)[1:300]), ST_fam_roots)
+ plot_heatmap(ST_fam_roots, sample.label="site_order")
+  
+ ntaxa(ST_fam_roots) 
+
+
+```
+
+### Export drosophila samples
+```{r}
+ST_dros  <- subset_samples(ST, sample_type == "Drosophila" )
+  ST.uni.dros <- get_unifrac(ST_dros) %>% as.matrix() %>% as.data.frame()
+  
+  write.csv(ST_dros@otu_table,"outputs/drosophila/ST_drosophila_esv_table.csv")
+  write.csv(ST_dros@sam_data, "outputs/drosophila/ST_drosophila_sample_table.csv")
+  write.csv(ST_dros@tax_table, "outputs/drosophila/ST_drosophila_taxonomy_table.csv")
+  write.csv(ST.uni.dros, "outputs/drosophila/ST_drosophila_weighted_unifrac.csv")
+  
 ```
 
 

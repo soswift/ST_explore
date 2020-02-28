@@ -438,10 +438,10 @@ plot_pval_vs_RA(p_drosophila, "Drosophila")
   
 ```{r}
 # Make a basic volcano plot
-  with(p_all_samples, plot(models$slope, models$slope_p, pch=20, main="Volcano plot"))
+  with(p_all_samples_z, plot(models$slope, models$slope_p, pch=20, main="Volcano plot"))
 
 # Add colored points: red if models$slope_p<0.05, orange of log2FC>1, green if both)  
-with(subset(p_all_samples$models, slope_p<.05 ), points(slope, slope_p, pch=20, col="red"))
+with(subset(p_all_samples_z$models, slope_p<.05 ), points(slope, slope_p, pch=20, col="red"))
 
 ```
 

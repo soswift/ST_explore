@@ -65,10 +65,11 @@ field_meta$rainfall <-  raster::extract(x = oahu_rainfall,
 
 
 #makes raster map of oahu
-plot(oahu_rainfall, main="Annual Rainfall Oahu")
+png(filename = "outputs/figures/rainfall_sites.png")
+plot(oahu_rainfall, main=" Estimated Annual Rainfall for Oahu (m)")
 points(x=field_meta$long, y=field_meta$lat, pch=20, col="black", cex=1)
 points(x=field_meta$long, y=field_meta$lat, pch=20, col="white", cex=0.4)
-
+dev.off()
 
 ```
 
@@ -130,6 +131,7 @@ field_meta$shore_dist <- geosphere::distGeo(shore, field_meta[c("long","lat")])
 
 # Show colinearity of rainfall, elevation, distance from shore
 
+max(field_meta$shore_dist) - min(field_meta$shore_dist)
 
 plot(
   field_meta$site_order,
@@ -159,9 +161,21 @@ plot(
   pch = 20
   )
 
-  
+# plot just rainfall against shore distance
+transect_meta <- field_meta[field_meta$habitat != "Marine",]
+ 
+png("outputs/figures/rainfall_vs_shore_dist.png")
+plot(
+  transect_meta$shore_dist,
+  transect_meta$rainfall,
+  col = "darkblue",
+  pch = 16,
+  cex = 1.3,
+  xlab = "Distance From Shore",
+  ylab = "Rainfall"
+  )
 
-
+dev.off()
 
 ```
 
