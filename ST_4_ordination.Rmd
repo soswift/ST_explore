@@ -57,7 +57,7 @@ Need to import, arrange, mirror, and convert to distance matrix.
 
 ```{r import_unifrac}
 # Read in unifrac distances
-x <- scan("data/raw/sequence/all_unifrac_100.weighted.dist")
+x <- scan("data/raw/sequence/all_unifrac_100.unweighted.dist")
 x <- x[-1]
 
 # make empty matrix
@@ -156,28 +156,27 @@ ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
 
 #### by habitat
 
-p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host", title="Habitat/Host: NMDS, Bray, All Samples, All OTUs")
+p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host")
 p <- p + scale_shape_discrete(solid = T)
-print(p)
+p
 
 # write to pdf
-pdf("outputs/figures/all_samples_habitat_nmds.pdf",width = 8, height = 6)
-print(p)
-dev.off()
+ggsave("outputs/figures/all_samples_habitat_nmds.png")
+
 #### by transect
 
-p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "transect_name", shape = "host", title="Transect/Host NMDS, Unifrac, All Samples, All OTUs")
-p <- p + scale_shape_discrete(solid = T)
+p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "site_order", shape = "host")
+p <- p + scale_shape_discrete(solid = T) + scale_color_gradientn(colours = rainbow(5))
 
 print(p)
 
 # write to pdf
-pdf("outputs/figures/all_samples_nmds.pdf",width = 8, height = 6)
-print(p)
-dev.off()
+ggsave("outputs/figures/all_samples_nmds.png")
 
 rm(ST.ord)
 ```
+
+
 ### Just Host Associated
 ```{r}
 ST  <- subset_samples(ST_16S_phy, host != "Nonhost")
@@ -275,8 +274,6 @@ Mosquitoes are also plant feeders and were sorted to ensure only non-blooded fem
 
 
 ```{r samplesNMDS, echo = F, message=F, results='hide'}
-# initialize empty dataframe to store ordination values
-ST_sample_ords <-data.frame(MDS1 = numeric(),MDS2 = numeric(), sample_type = character())
 
 # loop through and ordinate each sample types
 
@@ -304,7 +301,7 @@ for ( i in sample_types ){
   
   p <-ggplot(MDS_cor,  aes(shore_dist, MDS1, color = shore_dist)) +
     geom_point(size = 4) +
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
+     scale_color_gradientn(colors = rainbow(5) ) + 
     labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val), title = i)+
     theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
     coord_flip()
@@ -343,7 +340,7 @@ for ( i in sample_types ){
   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", title= i)
   p <- p +
     geom_point(size = 4)+
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
+    scale_color_gradientn(colors = rainbow(5) ) + 
     scale_shape_discrete(solid = T)+
     theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))
   print(p)
@@ -476,7 +473,7 @@ ST_mid  <- subset_samples(ST, (transect_name %in% c("STDrumRoadMauka","STFalls",
   p <- plot_ordination(ST_mid, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Samples In The Ground, Middle Sites"))
   p <- p  + 
     scale_shape_discrete(solid=T)+
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") +
+    scale_color_gradientn(colours = rainbow(5)) +
     theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
     geom_point(size = 3)+
     coord_fixed()
@@ -501,8 +498,8 @@ First, transform the otu abundance to relative abundance, then sum.
  ntaxa(ST_famglom)
 
  ST_fam_roots <- subset_samples(ST_famglom, sample_type == "PlantRoot")
- ST_fam_roots <- prune_taxa(names(sort(taxa_sums(ST_fam_roots),TRUE)[1:300]), ST_fam_roots)
- plot_heatmap(ST_fam_roots, sample.label="site_order")
+ ST_fam_roots <- prune_taxa(names(sort(taxa_sums(ST_fam_roots),TRUE)[1:30]), ST_fam_roots)
+ plot_heatmap(ST_fam_roots, sample.label="transect_name")
   
  ntaxa(ST_fam_roots) 
 
@@ -523,6 +520,32 @@ ST_dros  <- subset_samples(ST, sample_type == "Drosophila" )
 
 
 
+### Mantel tests
+
+```{r}
+sample_types <- unique(ST@sam_data$sample_type)
+
+mantel_outputs <- data.frame(SampleType = sample_types, Mantel_R = NA, Mantel_Significance = NA)
+
+for(i in seq_along(sample_types)){
+  # subset by sample type
+  ST_sub <- subset_samples(ST, sample_type == sample_types[[i]])
+  ST.uni <- get_unifrac(ST_sub)
+  
+  # distance matrix of shore_dist
+  shore_dists  <- ST_sub@sam_data$shore_dist
+  d.shore_dist <-dist(shore_dists, method = "euclidean")  
+  
+  # mantel
+  uni_shore_dist <- mantel(ST.uni, d.shore_dist, method = "spearman", permutations = 9999, na.rm = T)
+  mantel_outputs[i,"Mantel_R"]            <- uni_shore_dist$statistic
+  mantel_outputs[i,"Mantel_Significance"] <- uni_shore_dist$signif
+  }
+
+mantel_outputs
+write.csv(mantel_outputs, "outputs/mantel_outputs.csv")
+
+```
 
 
 ### Heatmaps
