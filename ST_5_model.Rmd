@@ -34,10 +34,12 @@ Goal:
 library(ggplot2)
 library(dplyr)
 library(microbiome)
+library(vegan)
 
 source("src/make_phyloseq.R")
 
 ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
+
 
 # make phyloseq
 ST_16S_phy <- make_phyloseq(ST_16S)
@@ -74,8 +76,8 @@ This function generates linear models on the zscore of otu abundance as X and zs
 
 get_z_models <- function(physeq, variable = "shore_dist") {
   ## Testing:
-   # variable = "shore_dist"
-   # physeq = ST
+    variable = "shore_dist"
+    physeq = ST_plant
   # 
   # pull out variable from sample data
   shore_dist <- physeq@sam_data[[variable]] %>% as.vector
@@ -83,15 +85,20 @@ get_z_models <- function(physeq, variable = "shore_dist") {
   shore_dist_z  <- scale(shore_dist, center = T, scale = T)
 
   # pull out otu abundances
-  abund <- otu_table(physeq) %>%  as.data.frame()
+
+  physeq_rel <- transform_sample_counts(physeq, function(x) x / sum(x) )
+  abund      <- otu_table(physeq) %>%  as.data.frame()
+  rel_abund  <- otu_table(physeq_rel) %>% as.data.frame()
+  asin_sqrt_abund <- apply(rel_abund, 1, function(x) asin(sqrt(x)))  %>% t() %>% as.data.frame()
+  
+  z_abund <- apply(asin_sqrt_abund, 1, function(x) scale(x)) %>% t() %>% as.data.frame()
   
   # apply model to each otu
-  probs <- apply(abund, 1, function(x.row) {
+  probs <- apply(z_abund, 1, function(x.row) {
           #TESTING: 
-          #x.row = abund[1200,] %>% unlist()
+          x.row = z_abund[21,] %>% unlist()
           # *** MODEL DEFINITION ***
-          x.row_z <- scale(x.row)
-          mod1 <- lm(x.row_z ~ shore_dist_z)
+          mod1 <- lm(x.row ~ shore_dist)
           ####################################
           
           sum1 <- summary(mod1)
@@ -103,15 +110,15 @@ get_z_models <- function(physeq, variable = "shore_dist") {
           t() %>%
           as.data.frame()
   # set column names for model outputs
-  colnames(probs) <-
+   colnames(probs) <-
   c(
   "intercept",
-  "int_err",
-  "int_t_value",
-  "int_p",
   "slope",
+  "int_err",
   "slope_err",
-  "slope_t_value",
+  "int_t",
+  "slope_t",
+  "int_p",
   "slope_p",
   "r.squared"
   )
@@ -121,8 +128,8 @@ get_z_models <- function(physeq, variable = "shore_dist") {
   probs$rel_abund <- rowSums(abund)/sum(rowSums(abund))
   
   # list otu abundance table and model information
-  output <- list(probs,abund)
-  names(output) <- c("models","abundance")
+  output <- list(probs,z_abund)
+  names(output) <- c("models","model_data")
   return(output)
 }
 
@@ -138,8 +145,8 @@ This function generates linear models using the arcsin square root transformed o
 
 get_arc_models <- function(physeq, variable = "shore_dist") {
   ## Testing:
-  #  variable = "shore_dist"
-  #  physeq = ST
+  # variable = "shore_dist"
+  # physeq = ST_plant
   # 
   # pull out variable from sample data
   shore_dist <- physeq@sam_data[[variable]] %>% as.vector
@@ -148,12 +155,13 @@ get_arc_models <- function(physeq, variable = "shore_dist") {
   physeq_rel <- transform_sample_counts(physeq, function(x) x / sum(x) )
   abund      <- otu_table(physeq) %>%  as.data.frame()
   rel_abund  <- otu_table(physeq_rel) %>% as.data.frame()
+  asin_sqrt_abund <- apply(rel_abund, 1, function(x) asin(sqrt(x)))  %>% t() %>% as.data.frame()
   # apply model to each otu
-  probs <- apply(rel_abund, 1, function(x.row) {
+  probs <- apply(asin_sqrt_abund, 1, function(x.row) {
           #TESTING: 
           # x.row = abund[1200,] %>% unlist()
           # *** MODEL DEFINITION ***
-          mod1 <- lm(asin(sqrt(x.row)) ~ shore_dist)
+          mod1 <- lm(x.row ~ shore_dist)
           ####################################
           
           sum1 <- summary(mod1)
@@ -168,12 +176,12 @@ get_arc_models <- function(physeq, variable = "shore_dist") {
   colnames(probs) <-
   c(
   "intercept",
-  "int_err",
-  "int_t_value",
-  "int_p",
   "slope",
+  "int_err",
   "slope_err",
-  "slope_t_value",
+  "int_t",
+  "slope_t",
+  "int_p",
   "slope_p",
   "r.squared"
   )
@@ -182,9 +190,12 @@ get_arc_models <- function(physeq, variable = "shore_dist") {
   # add otu relative abundance as a column
   probs$rel_abund <- rowSums(abund)/sum(rowSums(abund))
   
+  # add otu presence absence count as a column
+  probs$PA_count <- decostand(abund, "pa") %>% rowSums
+  
   # list otu abundance table and model information
-  output <- list(probs,abund)
-  names(output) <- c("models","abundance")
+  output <- list(probs,asin_sqrt_abund)
+  names(output) <- c("models","model_data")
   return(output)
 }
 
@@ -239,6 +250,82 @@ plot_pval_vs_RA <- function(got_models, description, physeq)
   abline(h=-log10(0.05))
 }
 ```
+
+## Plot a regression for each OTU based on cutoff values
+```{r}
+# plot each OTU
+model_view <- function(models_out = p_plants, physeq = ST_plant, p_cutoff = 0.001, presence_cutoff =0.5, description = "test", model_type = "arcsin(sqrt(RA)"){
+  # for testing
+   # models_out = p_plants
+   # physeq = ST_plant
+   # p_cutoff = 0.001
+   # presence_cutoff =0.5
+   # description = "test"
+   # z = 1
+  # get metadata
+  sample_meta <-as(sample_data(physeq), "data.frame")
+  sample_meta$id <- row.names(sample_meta)
+  
+  # subset by cutoffs
+ cool_ps <- models_out$models %>% filter(slope_p < p_cutoff & PA_count > presence_cutoff * ncol(models_out$model_data))
+
+ print(cool_ps$otu)
+
+ # get the model info and plot each otu
+ for(z in seq_along(cool_ps$otu)){
+ 
+  # pull out OTU relative abundance
+   otu_name <- cool_ps$otu[z]
+   
+   otu_mod <- models_out$models[otu_name,]
+   
+ an_otu <- models_out$model_data[otu_name,] %>% t() %>% as.data.frame()
+ an_otu$id <- row.names(an_otu) 
+ 
+ 
+  # for each OTU,  pull out metadata and taxonomy
+ 
+ an_otu_tax <- as.data.frame(tax_table(ST_plant), stringsAsFactors = F)
+ an_otu_tax <- an_otu_tax[otu_name,] 
+ an_otu_tax <- paste(an_otu_tax[1,], collapse = ";")
+ 
+
+ 
+ an_otu <- left_join(an_otu, sample_meta)
+ colnames(an_otu)[1] <- "model_data"
+ 
+ # plot relative abundance by the gradient
+ 
+  p <-ggplot(an_otu,  aes( shore_dist, model_data, color = shore_dist)) +
+    geom_point(size = 4) +
+    labs(title = paste(cool_ps$otu[z], "Transformed abundance vs. gradient distance"),
+         caption = paste("R^2 = ", round(otu_mod$r.squared, 3), "p =", otu_mod$slope_p)
+         )+
+    theme(title = element_text(size = 16, face = "bold"),
+          axis.text=element_text(size=12),
+          legend.text = element_text(size = 20),
+          plot.subtitle = element_text(size = 12),
+          plot.caption = element_text(size = 20))+
+    labs(color = "Gradient Distance", x = "Gradient Distance", y = model_type,
+          subtitle  = an_otu_tax) +
+    scale_color_viridis_c(option = "C")+
+    geom_abline(slope = otu_mod$slope, intercept = otu_mod$intercept)
+
+ 
+  print(p)
+  
+  output_dir <- paste("outputs/figures/", description , "_otus/", sep = "")
+  dir.create(output_dir)
+  ggsave(paste(output_dir, description, "_", otu_name ,"_regression.png", sep = ""),
+         width = 10, height = 7)
+ }
+ }
+ 
+model_view()
+
+```
+
+
 
 ### Linear models : All samples
 Probably, running these models on all samples together will not be very informative, but let's try!
@@ -315,6 +402,8 @@ plot_pval_vs_slope(p_shal_soil_arc, "Shallow Soil, arcsin(sqrt)")
 plot_pval_vs_RA(p_shal_soil_z, "Shallow Soil, zscore")
 plot_pval_vs_RA(p_shal_soil_arc, "Shallow Soil, arcsin(sqrt)")
 
+# models for each OTU
+model_view(models_out = p_shal_soil_arc, physeq = ST_shal_soil, description = "soil_shal")
 ```
 
 ### Linear models : Subset Sediment
@@ -373,9 +462,13 @@ Any good candidate OTUs varying across the gradient?
 ST_plant <- subset_samples(ST, sample_type %in% c( "PlantRoot"))
 ST_plant <- prune_taxa(taxa_sums(ST_plant) > 0, ST_plant)
 
+# pull out metadata
+ plant_meta <- as(sample_data(ST_plant), "data.frame")
+ plant_meta$id <- row.names(plant_meta)
+
 # run linear model on all OTUs across all samples (phyloseq object "ST")
-p_plant <- get_z_models(physeq = ST_plant, variable = "shore_dist")
-rm(ST_plant)
+p_plants <- get_arc_models(physeq = ST_plant, variable = "shore_dist")
+
 
 # how many otus have a tiny p value?
 length(p_plant$models$slope_p[  p_plant$models$slope_p < 0.001  ] )
@@ -385,6 +478,12 @@ plot_pval_vs_slope(p_plant, "Plant Roots")
 
 # plot 2
 plot_pval_vs_RA(p_plant, "Plant Roots")
+
+
+
+  # remove
+ 
+ #rm(ST_plant)
 ```
 
 ### Linear models : Subset Only Mosquito Samples

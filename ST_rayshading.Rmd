@@ -36,6 +36,7 @@ Create a bounding box for the desired area (Waimea). The leaflet package will di
 ```{r}
 library(rayshader)
 library(leaflet)
+library(dplyr)
 
 # define bounding box with longitude/latitude coordinates
 bbox <- list(
@@ -129,8 +130,10 @@ get_usgs_elevation_data <- function(bbox, size = "400,400", file = NULL,
 
 # download elevation data
 elev_file <- file.path("data/raw/", "sf-elevation.tif")
-get_usgs_elevation_data(bbox, size = image_size$size, file = elev_file,
-                        sr_bbox = 4326, sr_image = 4326)
+
+# uncomment to re-download the file
+#get_usgs_elevation_data(bbox, size = image_size$size, file = elev_file,
+#                        sr_bbox = 4326, sr_image = 4326)
 
 ```
 
@@ -142,6 +145,7 @@ Then, use rayshader code to calculate data layers and build a 2D plot.
 ```{r}
 # load elevation data
 elev_img <- raster::raster(elev_file)
+
 elev_matrix <- matrix(
   raster::extract(elev_img, raster::extent(elev_img), buffer = 1000), 
   nrow = ncol(elev_img), ncol = nrow(elev_img)
@@ -200,18 +204,153 @@ elev_matrix %>%
   sphere_shade(texture = "imhof1") %>% 
   add_water(watermap, color = "imhof1") %>%
   add_shadow(raymat, max_darken = 0.5) %>%
-  add_shadow(ambmat, max_darken = 0.5) %>%
+  add_shadow(ambmat, 0) %>%
   plot_3d(elev_matrix, zscale = zscale, windowsize = c(1200, 1000),
           water = TRUE, wateralpha = 0.5,
           theta = -120, phi = 20, zoom = 0.65, fov = 0)
  
-render_label(elev_matrix, x = coords_list$`1`$x, y = coords_list$`1`$y, z = 3000, zscale = 50, text = "test",
-              textsize = 2, linewidth = 5, alpha = 0.5, linecolor = "darkred")
-Sys.sleep(0.2)
-render_label(elev_matrix, x = coords_list$`2`$x, y = coords_list$`2`$y, z = 3000, zscale = 50,
-             text = "test", textsize = 2, linewidth = 5, alpha = 0.5, linecolor = "darkred")
 
-Sys.sleep(0.2)
 render_snapshot()
+```
+
+# Try to add some points
+
+```{r}
+
+library(geoviz)
+library(viridisLite)
+# fixed function by adding raise_agl to alt 
+
+# pull out sample points
+samps <- sample_data$metadata[!is.na(sample_data$metadata$long) & !is.na(sample_data$metadata$transect_name),]
+samps <- sample_data$metadata %>% group_by(long, lat, shore_dist) %>% summarise %>% filter(!is.na(shore_dist))
+
+
+map_viridis <- function(vec, num) {
+
+  vector_expanded <-round(vec, 1) * 10 # expand to allow for decimal precision
+  vector_exp_range <- max(vector_expanded) - min(vector_expanded)
+
+  colour_vector <- viridis(vector_exp_range + 1) # get vector of colour values for all possible decimals between min and max value
+  value_to_colour <- colour_vector[num * 10 - min(vector_expanded) + 1] # retrieve colour value for number
+
+  return(value_to_colour)
+
+}
+
+
+samps$colors <- sapply(samps$shore_dist, function(x) map_viridis(samps$shore_dist, x))
+
+# this came from library geoviz
+# "fixed" add_gps by cutting out all the line related items, and having it plot spheres instead of points
+# also just made it so params get written out and I can rgl:: spheres3d separately
+source("src/fixed_add_gps.R")
+
+sites_spheres <- custom_add_spheres(  elev_img,
+                                        samps$lat,
+                                        samps$long,
+                                        raise_agl = 80,
+                                        zscale = zscale,
+                                        colour = samps$colors,
+                                        point_size = 5,
+                                        rad = 2)
+
+```
+## check the image
+```{r}
+## still version for checking image quality
+
+
+
+
+rgl::clear3d()
+
+rgl::points3d(sites_spheres$x, sites_spheres$y, sites_spheres$z, 
+                   color = sites_spheres$col, alpha = sites_spheres$alpha, size = sites_spheres$size)
+
+#rgl::spheres3d(sites_spheres$x, sites_spheres$y, sites_spheres$z, 
+ #                  color = sites_spheres$col, alpha = sites_spheres$alpha, size = sites_spheres$size, radius = sites_spheres$radius)
+elev_matrix %>%
+  sphere_shade(texture = "imhof1") %>%
+  add_water(watermap, color = "desert") %>%
+  add_shadow(raymat, max_darken = 0.5) %>%
+  add_shadow(ambmat, 0) %>%
+  rayshader::plot_3d(
+    elev_matrix,
+    zscale = zscale,
+    windowsize = c(1200, 1000),
+    water = F,
+    wateralpha = 0.2,
+    theta = 237,
+    phi = 25,
+    zoom = 0.55,
+    fov = 0,
+    shadow = T
+    )
+rgl::points3d(sites_spheres$x, sites_spheres$y, sites_spheres$z, 
+                   color = sites_spheres$col, alpha = sites_spheres$alpha, size = sites_spheres$size)
+render_snapshot()
+#rgl.postscript("tmp.txt", fmt = "svg")
+# snapshot3d("tmp.png")
+ 
+# 
+#  add_gps_to_rayshader(
+  # elev_img,
+  # samps$lat,
+  # samps$long,
+  # raise_agl = 50,
+  # line_width = 1,
+  # lightsaber = F,
+  # zscale = zscale,
+  # ground_shadow = F,
+  # colour = samps$colors,
+  # clamp_to_ground = T,
+  # as_line = F,
+  # point_size = 10,
+  # rad = 2
+# )
+# 
+# render_snapshot()
+```
+## MAKE A GIF OMG
+
+
+```{r}
+# from https://wcmbishop.github.io/rayshader-demo/#one-can-simply-gif
+# which is sooo goood, I pulled the function save_3d_gif
+# "fixed" by adding lines 77:78 to allow adding spheres to the plot for points
+source("src/rayshader_demo/rayshader-gif.R")
+
+
+
+sites_spheres <- custom_add_spheres(  elev_img,
+                                        samps$lat,
+                                        samps$long,
+                                        raise_agl = 80,
+                                        zscale = zscale,
+                                        colour = samps$colors,
+                                         point_size = 3,
+                                        rad = 2)
+
+n_frames <- 180
+thetas <- transition_values(from = 230, to = 280, steps = n_frames)
+# generate gif
+zscale <- 10
+base_shade <- elev_matrix %>% 
+                sphere_shade(texture = "imhof1") %>% 
+                add_water(watermap, color = "imhof1") %>%
+                add_shadow(raymat, max_darken = 0.5) %>%
+                add_shadow(ambmat, 0)
+  
+  
+
+
+
+
+  save_3d_gif(hillshade = base_shade, elev_matrix, file = "outputs/test4.gif", duration = 9,
+              solid = TRUE, shadow = TRUE, water = TRUE, zscale = zscale,
+              watercolor = "imhof1", wateralpha = 0.2,
+              waterlinecolor = "#ffffff", waterlinealpha = 0.2,
+              theta = thetas, phi = 25, sites_spheres = sites_spheres)
 ```
 

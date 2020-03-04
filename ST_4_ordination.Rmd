@@ -42,7 +42,14 @@ library(dplyr)
 source("src/make_phyloseq.R")
 ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
 
-ST_16S_phy <- make_phyloseq(ST_16S)
+# make phyloseq object
+ST_16S_phy  <- make_phyloseq(ST_16S)
+ST_16S_phy  <- subset_samples(ST_16S_phy, sample_type != "PlantShoot")
+
+# summit water had duplicate filters, discard one set
+
+ST_16S_phy  <- subset_samples(ST_16S_phy, !(sample_barcode %in% c(2281, 2273, 2265,2257,2249,2241,2233, 2225, 2217)))
+
 
 # set seed
 
@@ -108,13 +115,19 @@ get_unifrac <- function(physeq, unifrac_matrix = m){
 ## Set up ggplot
 ```{r ggplot}
 theme_set(theme_bw())
-pal_c = "RdYlBu"
+
 pal_d = "Dark2"
 scale_colour_discrete <-  function(palname=pal_d, ...){
   scale_colour_brewer(palette=palname, ...)
 }
 scale_fill_discrete <-  function(palname=pal_d, ...){
     scale_fill_brewer(palette=palname, ...)
+}
+
+pal_c = "C"
+
+uniform_gradient_color <- function(palname = pal_c){
+  scale_color_viridis_c(option = palname)
 }
 
 # Can change these settings with viridis package
@@ -166,7 +179,7 @@ ggsave("outputs/figures/all_samples_habitat_nmds.png")
 #### by transect
 
 p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "site_order", shape = "host")
-p <- p + scale_shape_discrete(solid = T) + scale_color_gradientn(colours = rainbow(5))
+p <- p + scale_shape_discrete(solid = T) + uniform_gradient_color()
 
 print(p)
 
@@ -205,8 +218,19 @@ Take a closer look at transect samples (no marine samples).
 
 # subset to just transect samples
 ST  <- subset_samples(ST_16S_phy, habitat != "Marine")
-ST  <- subset_samples(ST, sample_type != "PlantShoot")
 ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+# get unifrac distances
+
+ST.uni <- get_unifrac(ST)
+
+# write out for craig
+
+  # write.csv(ST@otu_table,"outputs/transects_data/ST_transects_esv_table.csv")
+  # write.csv(ST@sam_data, "outputs/transects_data/ST_transects_sample_table.csv")
+  # write.csv(ST@tax_table, "outputs/transects_data/ST_transects_taxonomy_table.csv")
+  # write.csv(as.data.frame(as.matrix(ST.uni)), "outputs/transects_data/ST_transects_unweighted_unifrac.csv")
+
 
 #################################################################
 ## ST is the phyloseq object containing just transect samples! ##
@@ -216,7 +240,7 @@ ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 rm(ST_16S_phy)
 
 # ordinate
-ST.uni <- get_unifrac(ST)
+
 ST.ord <- ordinate(ST, "NMDS", ST.uni)
 
 # by sample
@@ -245,7 +269,7 @@ for ( type in host_types ){
   #plot
   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("NMDS, Unifrac,",type))
   p <- p +
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") +
+    uniform_gradient_color() +
     scale_shape_discrete(solid = T)
     
   print(p)
@@ -299,22 +323,30 @@ for ( i in sample_types ){
  
   # ggplot scatterplot and regression line
   
-  p <-ggplot(MDS_cor,  aes(shore_dist, MDS1, color = shore_dist)) +
-    geom_point(size = 4) +
-     scale_color_gradientn(colors = rainbow(5) ) + 
-    labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val), title = i)+
-    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
-    coord_flip()
+   p <-ggplot(MDS_cor,  aes(shore_dist, MDS1, color = shore_dist)) +
+     geom_point(size = 4) +
+  #   labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val),
+   #  title = i) +
+     theme(
+     title = element_text(size = 25, face = "bold"),
+     axis.text.y = element_text(size = 25, face = "bold"),
+     axis.text.x = element_blank(),
+     legend.text = element_text(size = 20)
+     ) +
+     labs(color = "Gradient Distance", x = "Gradient Distance", y = "") +
+     coord_flip() +
+     uniform_gradient_color()
   
   # if low p value, plot regression line
   
   if(  p_val <0.01  ){
     
-    # if regression is positive, flip the plot and add regresssion line
+    # if regression is positive, flip the plot, regresssion line, colors
     
-    if(mod1$coefficients[2] > 0 ){
+    if(mod1$coefficients[2] < 0 ){
       
-    p <- p+ geom_abline(slope = mod1$coefficients[2]*-1, intercept = mod1$coefficients[1]) + scale_x_reverse()
+    p <- p+ geom_abline(slope = mod1$coefficients[2]*-1, intercept = mod1$coefficients[1]*-1) +
+      scale_y_reverse() 
       
     } 
     
@@ -327,9 +359,8 @@ for ( i in sample_types ){
 
   print(p)
   
-  png(paste("outputs/figures/mds_cor_" , i , ".png", sep = ""), width = 700, height = 600)
-  print(p)
-  dev.off()
+  ggsave(paste("outputs/figures/mds_cor_" , i , ".png", sep = ""), width = 12, height = 7)
+
   
   # rest
   Sys.sleep(0.5)
@@ -340,9 +371,10 @@ for ( i in sample_types ){
   p <- plot_ordination(ST_sub, ST.ord, type="samples", color = "shore_dist", title= i)
   p <- p +
     geom_point(size = 4)+
-    scale_color_gradientn(colors = rainbow(5) ) + 
+    uniform_gradient_color() + 
     scale_shape_discrete(solid = T)+
-    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))
+    theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
+    labs(color = "Gradient Distance")
   print(p)
   
   png(paste("outputs/figures/nmds_" , i , ".png", sep = ""), width = 800, height = 600)
@@ -401,13 +433,14 @@ ST_soil  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","Plan
   
   # nmds plot shore_dist
    
-  p <- plot_ordination(ST_soil, ST.ord, type="samples", color = "shore_dist", shape = "sample_type")
+  p <- plot_ordination(ST_soil, ST.ord, type="samples", color = "shore_dist", shape = "host")
   p <- p  + 
     scale_shape_discrete(solid=T)+
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") +
+    uniform_gradient_color() +
     theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
     geom_point(size = 3)+
-    coord_fixed()
+    coord_fixed()+
+    labs(shape = "Host Type", color = "Gradient Distance")
   print(p)
   
   # write out
@@ -419,7 +452,8 @@ ST_soil  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","Plan
       scale_shape_discrete(solid=T)+
       theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
       geom_point(size = 3)+
-      coord_fixed()
+      coord_fixed()+
+      labs(color = "Gradient Distance", shape = "Host Type")
     print(p)
     
    # write out
@@ -444,14 +478,23 @@ ST_soil  <- subset_samples(ST, sample_type %in% c("SoilDeep","SoilShallow","Plan
  # Cor plot shore_dist and NMDS1
   p <- ggplot(MDS_cor,  aes(shore_dist, NMDS1, color = shore_dist)) +
     geom_point(size=3) +
-    scale_color_gradient2(low = "green", mid = "blue", high = "red") + 
-    geom_abline(slope = mod1$coefficients[2], intercept = mod1$coefficients[1]) +
-    labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val)) +
-    theme(title = element_text(size = 16, face = "bold"),legend.text = element_text(size = 20), axis.text.x = element_blank() ) +
+      uniform_gradient_color() +  # Flipping the colors to match single sample NMDS plots :/
+    labs(caption = paste("R^2 = ", round(r_sq, 3), "p =", p_val),
+         x = "Gradient Distance",
+         color = "Gradient Distance") +
+    theme(title = element_text(size = 16, face = "bold"),
+          axis.text.y = element_text(size = 25, face = "bold"),
+          legend.text = element_text(size = 20),
+          axis.text.x = element_blank(),
+          plot.caption = element_text(size = 20)) +
+    geom_abline(slope = mod1$coefficients[2], intercept = mod1$coefficients[1])+
     coord_flip()
+  
+ 
+
   print(p)
   
-  ggsave("outputs/figures/soils_etc_cor.png", width = 10, height = 10)
+  ggsave("outputs/figures/soils_etc_cor.png", width = 10, height = 7)
 
 
   
@@ -473,7 +516,7 @@ ST_mid  <- subset_samples(ST, (transect_name %in% c("STDrumRoadMauka","STFalls",
   p <- plot_ordination(ST_mid, ST.ord, type="samples", color = "shore_dist", shape = "sample_type", title= paste("Samples In The Ground, Middle Sites"))
   p <- p  + 
     scale_shape_discrete(solid=T)+
-    scale_color_gradientn(colours = rainbow(5)) +
+    uniform_gradient_color() +
     theme(title = element_text(size = 16, face = "bold"), axis.text=element_text(size=12),legend.text = element_text(size = 20))+
     geom_point(size = 3)+
     coord_fixed()
