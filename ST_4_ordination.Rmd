@@ -28,17 +28,27 @@ TODO:
 
 # Setup
 ## Import data and create phyloseq object
-Reading in data
+Reading in the data. 
 
+Start by reading in the microbial sequencing data.
+Data consists of a list of dataframes: sample metadata, sequence abundance, and microbial taxonomy
 
 ```{r setup}
+# load libraries
 library(phyloseq)
 library(viridisLite)
 library(speedyseq)
 library(ggplot2)
 library(dplyr)
+library(vegan)
+library(data.table)
+
+# set seed
+
+set.seed( 100 )
 
 
+# read in microbial data
 source("src/make_phyloseq.R")
 ST_16S <- readRDS("data/processed/cleaned/ST_16S_spatial.rds")
 
@@ -50,10 +60,89 @@ ST_16S_phy  <- subset_samples(ST_16S_phy, sample_type != "PlantShoot")
 
 ST_16S_phy  <- subset_samples(ST_16S_phy, !(sample_barcode %in% c(2281, 2273, 2265,2257,2249,2241,2233, 2225, 2217)))
 
+rm(ST_16S)
 
-# set seed
+```
 
-set.seed(100)
+Next, read in the metabolite data.
+Two data frames: chemical abundances, sample metadata
+
+```{r}
+# read in metabolite data
+read_metabolite <-
+  function(data_input = "data/raw/metabolite/Waimea_AllSamples_Relativized.csv",
+           meta_input = "data/raw/sample/MS_samples_waimea_supertransect - Full Metadata Waimea_Supertransect.csv") {
+  
+    
+  # read in sample metadata
+  meta <- fread(input = meta_input)
+  
+  
+  # read raw data  
+  chem <- fread(input = data_input)
+  
+  # pull out feature names (first column)
+  
+  chem_features <- chem[[1]]
+  
+  # drop feature names column from table
+  chem[, sample_name := NULL]
+  
+  # pull out sample names (column names) and extract 4 digit barcode
+  chem_samples  <- sub(".*(\\d{4}).*","\\1",colnames(chem))
+  
+  # print warning if samples don't match the barcode pattern
+  if(  !all(  grepl("\\d{4}", chem_samples)  )  ){
+  warning("Some samples are missing a barcode and will be dropped:")
+  print(chem_samples[!grepl("\\d{4}",chem_samples)])
+  
+  # drop those samples from the data set
+  chem <- chem[ ,grepl("\\d{4}", chem_samples), with = F]
+  
+  }
+  chem_samples  <- sub(".*(\\d{4}).*","\\1",colnames(chem))
+  
+  # reassign names
+  chem <- as.matrix(chem)
+  row.names(chem) <-   as.character(chem_features)
+  colnames(chem)  <-   chem_samples
+  
+
+  
+  data_list <- list(meta, chem)
+  names(data_list) <- c("metadata","abundance")
+  
+  return(data_list)
+  }
+  
+
+ST_chem <- read_metabolite()
+
+# read in metabolite sample metadata
+
+
+# make chemistry phyloseq object
+make_chem_phyloseq <-
+  function(chem_data = ST_chem, id_column = "sample_barcode") {
+    # make 'otu table' out of chemical abundance
+    abund_phy <- otu_table(chem_data$abundance, taxa_are_rows = T)
+    
+    samples <- chem_data$metadata
+    
+    sample_names <- samples[[id_column]]
+    
+    sample_phy <- sample_data(samples)
+    sample_names(sample_phy) <- sample_names
+    
+    phy <- phyloseq(abund_phy, sample_phy)
+    
+    return(phy)
+}
+
+ST_chem_phy <- make_chem_phyloseq()
+
+rm(ST_chem)
+
 
 ```
 
@@ -153,37 +242,52 @@ uniform_gradient_color <- function(palname = pal_c){
 To start, NMDS of all samples, all OTUs (no additional filtering), Unifrac dissimilarity. 
 
 ```{r allNMDS, echo = F, message=F, results='hide'}
-# It's faster to save and read in the ordination object
-# To generate Unifrac ordination run the following: 
+
+# ordinate microbial using unifrac distances
 
 ST.uni <- get_unifrac(ST_16S_phy)
 
 ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
-#saveRDS(ST.ord,"data/interim/ST.ord.rds")
 
-# To generate Unifrac ordination run the following
+# ordinate metabolome samples
 
-#ST.ord <- ordinate(ST_16S_phy)
+ST_chem.ord <- ordinate(ST_chem_phy, "NMDS", distance = "bray")
 
 
+
+# Colors
 
 #### by habitat
 
-p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host")
-p <- p + scale_shape_discrete(solid = T)
-p
+# microbes
+all_micro_habitat <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host")
+all_micro_habitat <- all_micro + scale_shape_discrete(solid = T)
+all_micro_habitat
 
-# write to pdf
-ggsave("outputs/figures/all_samples_habitat_nmds.png")
+
+# write to png
+ggsave("outputs/figures/microbe_all_samples_habitat_nmds.png")
+
+# metabolites
+all_chem_habitat <- plot_ordination(ST_chem_phy, ST_chem.ord, type="samples", color = "habitat", shape = "host")
+all_chem_habitat <- all_chem + scale_shape_discrete(solid = T)
+all_chem_habitat
+
+ggsave("outputs/figures/metabolite_all_samples_habitat_nmds.png")
 
 #### by transect
 
-p <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "site_order", shape = "host")
-p <- p + scale_shape_discrete(solid = T) + uniform_gradient_color()
+# microbes
+all_micro_elevation <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "elevation", shape = "host")
+all_micro_elevation <- all_micro_elevation + scale_shape_discrete(solid = T) + uniform_gradient_color()
+all_micro_elevation
 
-print(p)
+# metabolites
+all_chem_elevation <- plot_ordination(ST_chem_phy, ST_chem.ord, type="samples", color = "elevation", shape = "host")
+all_chem_elevation <- all_chem_elevation + scale_shape_discrete(solid = T) + uniform_gradient_color()
+all_chem_elevation
 
-# write to pdf
+# write to png
 ggsave("outputs/figures/all_samples_nmds.png")
 
 rm(ST.ord)
@@ -203,7 +307,7 @@ ST.ord <- ordinate(ST, "NMDS", ST.uni)
 
 # by sample
 p = plot_ordination(ST, ST.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Unifrac, Transect Samples, All OTUs")
-p + scale_shape_discrete(solid = T) 
+p + scale_shape_discrete(solid = T)
 ```
 
 
@@ -534,17 +638,17 @@ First, transform the otu abundance to relative abundance, then sum.
 
 ```{r famMerge}
 # sum at family level
- ST_famglom <- speedyseq::tax_glom(ST, "family")
+#  ST_famglom <- speedyseq::tax_glom(ST, "family")
+# # 
+# # # check
+#  ntaxa(ST)
+#  ntaxa(ST_famglom)
 # 
-# # check
- ntaxa(ST)
- ntaxa(ST_famglom)
-
- ST_fam_roots <- subset_samples(ST_famglom, sample_type == "PlantRoot")
- ST_fam_roots <- prune_taxa(names(sort(taxa_sums(ST_fam_roots),TRUE)[1:30]), ST_fam_roots)
- plot_heatmap(ST_fam_roots, sample.label="transect_name")
-  
- ntaxa(ST_fam_roots) 
+#  ST_fam_roots <- subset_samples(ST_famglom, sample_type == "PlantRoot")
+#  ST_fam_roots <- prune_taxa(names(sort(taxa_sums(ST_fam_roots),TRUE)[1:30]), ST_fam_roots)
+#  plot_heatmap(ST_fam_roots, sample.label="transect_name")
+#   
+#  ntaxa(ST_fam_roots) 
 
 
 ```

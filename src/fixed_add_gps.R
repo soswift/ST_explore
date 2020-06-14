@@ -1,4 +1,4 @@
-custom_add_spheres <-function (raster_input, lat, long, alt, zscale, 
+custom_add_points <-function (raster_input, lat, long, alt, zscale, 
           colour = "red", alpha = 0.8, 
           raise_agl = 0, point_size = 20, rad = 2) 
 {

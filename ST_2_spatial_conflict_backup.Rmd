@@ -21,7 +21,7 @@ Using the sample coordinates, pull out these environmental variables and join th
 library(raster)
 library(ggplot2)
 library(dplyr)
-#library(tidyr)
+library(tidyr)
 library(rgdal)
 library(geosphere)
 library(vegan)
@@ -84,16 +84,15 @@ points(x=field_meta$long, y=field_meta$lat, pch=20, col="black", cex=1)
 points(x=field_meta$long, y=field_meta$lat, pch=20, col="white", cex=0.4)
 dev.off()
 
-rm(oahu_rainfall)
 ```
 
 ### Elevation
 
 ```{r elevation}
 # source: http://www.soest.hawaii.edu/coasts/data/hawaii/dem.html
-#  Code to correct project for raw raster. Takes a lot of resources to run.
+#  Code to correct project for raw raster. Takes a lot of resources to run. 
  oahu_elevation <- raster("data/raw/spatial/oahu_dem/w001001.adf")
-  oahu_elevation <- projectRaster(oahu_elevation, crs = set_proj)
+ oahu_elevation <- projectRaster(oahu_elevation, crs = set_proj)
 # saveRDS(oahu_elevation,"data/interim/oahu_elev_raster.RDS")
 
 # oahu_elevation <- readRDS("data/interim/oahu_elev_raster.RDS")
@@ -110,7 +109,7 @@ MS_meta$elevation <-  raster::extract(x = oahu_elevation,
 plot(oahu_elevation)
 points(x=field_meta$long, y=field_meta$lat, pch=20, col="black", cex=1)
 points(x=field_meta$long, y=field_meta$lat, pch=20, col="white", cex=0.4)
-rm(oahu_elevation)
+
 ```
 
 
@@ -315,17 +314,18 @@ ST_16S$metadata <- metadata_add
 saveRDS(ST_16S,"data/processed/cleaned/ST_16S_spatial.rds")
 
 # write to tsv files for MS analysis
-write.table(ST_16S$abundance, "data/processed/ST_16S_abundance.tsv",sep = "\t",row.names = F)
-write.table(ST_16S$taxonomy, "data/processed/ST_16S_taxonomy.tsv",sep = "\t",row.names = F)
-write.table(ST_16S$metadata, "data/processed/ST_16S_metadata.tsv",sep = "\t",row.names = F)
+write.table(ST_16S$abundance, "data/processed/ST_16S_abundance.tsv",sep = "\t")
+write.table(ST_16S$taxonomy, "data/processed/ST_16S_taxonomy.tsv",sep = "\t")
+write.table(ST_16S$metadata, "data/processed/ST_16S_taxonomy.tsv",sep = "\t")
 
 # Add the same key columns to the MS metadata
 bcodes <-metadata_add[c("sample_barcode","MS_barcode")]
 colnames(bcodes) <- c("DNA_barcode","MS_barcode")
 
-# remove the original summit samples from MS, since they got dropped in later analyses
-# this will preserve the ~1:1 DNA sample to MS sample ratio
-bcodes <- bcodes[!(bcodes$DNA_barcode %in% summit_originals),]
+# drop the summit originals samples (otherwise messes up 1 to 1 relationship)
+# these samples are also dropped for microbiome analyses later on
+
+bcodes <- bcodes[bcodes$DNA_barcode]
 
 
 MS_meta_add <- MS_meta %>% left_join(bcodes, by = c("sample_barcode" = "MS_barcode"))

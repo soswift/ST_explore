@@ -1,0 +1,231 @@
+---
+title: "SuperTransect - Organizing Microbe Data For MMVEC"
+output:
+  html_document:
+    df_print: paged
+---
+### Purpose:
+We have microbial abundance (species x samples) and microbial taxonomy as flat .csv files.
+Most R statistical methods want samples (observations) as rows and species as columns (variables).
+
+In order to use mmvec, we need to transpose the abundance table so that rows are species and columns are samples.
+
+# Read in the data
+
+Let's read in the microbial abundance, taxonomy, and the MS metadata sheet.
+We want microbial samples and MS samples to corellate 1:1.
+There are extra microbial samples that don't correspond to MS samples and vice versa. 
+Those samples need to be dropped
+
+ *Microbial Abundance Data*
+Columns:
+
+- label   = clustering threshold. nNot necessary (just let's you know data was not clustered by % similarity).
+
+- Group   = unique ID for the microbial PCR products. This lets us join abundance to the metadata table
+
+- otu00003, otu00004, etc.  = DNA sequence counts for each 'species' of microbe. The column names match the 'OTU' column the taxonomy table. 
+
+```{r}
+library(data.table)
+
+setwd("/home/sean/Documents/Bioinformatics/Projects/SuperTransect/Analysis/exploration/R_notebook")
+
+
+abundance <- fread("data/processed/ST_16S_abundance.tsv", sep = "\t", header = T, key = "Group")
+abundance[1:5,1:5]
+```
+
+*Microbial Taxonomy Data*
+
+Currently, each taxanomic rank is separated into columns. 
+For mmvec, we want all columns mashed together with ";" separating each rank.
+
+Columns:
+- OTU   = unique identifier for each microbial 'species'. Matches the column names of the abundance data
+- Size  = total sequences in this OTU. Not really needed.
+
+-kingdom, phylum, etc.  = clasification of the otu at different taxonomic ranks 
+
+
+```{r}
+taxonomy <- fread("data/processed/ST_16S_taxonomy.tsv", sep = "\t", header = T, key = "OTU")
+taxonomy[1:5,1:5]
+
+```
+
+*Metadata*
+
+This should be familiar! Slightly different formatting from the MS data, but mostly the same information.
+
+Columns:
+
+- id              = unique id for each microbial PCR product that was sequenced. 
+                  Not exactly the same as 'sample_id' because some samples were sequenced multiple times.
+                  This column matches the abundance table column 'Group'.
+                  
+                  
+sample_barcode  = Unique id for each sample taken out of the field.
+MS_barcode      = Unique id for corresponding MS sample taken out of the field.
+                  This is the one we care about for mmvec!
+
+And lots of other useful sample metadata columns that we won't use....
+
+```{r}
+metadata <- fread("data/processed/ST_16S_metadata.tsv", header = T, sep = "\t", key = "id")
+
+# These are the columns we want
+important_columns <- c("id",
+                       "sample_barcode",
+                       "MS_barcode",
+                       "sample_type")
+
+# Subset metadata to just the important columns
+metadata[ , ..important_columns]
+
+```
+
+# Fix Potential Problems
+
+Some microbial samples don't have a corresponding MS sample. Let's get rid of those samples
+Are all the MS barcodes unique? They should be...
+
+```{r}
+message("Number of rows in metadata")
+nrow(metadata)
+
+message("Number of rows that have MS data")
+metadata_ms <- na.omit(metadata, cols = "MS_barcode")
+nrow(metadata_ms)
+
+message("Number of duplicated MS barcodes")
+duplicated_ms <- metadata_ms[duplicated(MS_barcode, by = MS_barcode),]
+nrow(duplicated_ms)
+
+duplicated_ms
+
+```
+
+Okay, so we sequenced the ridge water samples twice. Let's drop one set of duplicates. 
+Note, we're also missing the marine water and sediment samples for now.
+
+```{r}
+# drop extra water samples
+samples_to_drop <- metadata_ms[transect_name == "STSummit" & grepl("Water-DNA",collection_label), id]
+
+metadata_ms <- metadata_ms[!id %in% samples_to_drop,]
+nrow(metadata_ms)
+
+message("any duplicated samples left?")
+anyDuplicated(metadata_ms, by = "MS_barcode")
+
+```
+
+## Make All The Data Match Up
+Now that we have chosen the right samples, let's match up the abundance and taxnomomy tables to the MS barcodes.
+
+```{r}
+# subset abundance
+abundance_ms <- abundance[Group %in% metadata_ms$id]
+
+# subset taxnomy (just in case some OTUs no longer exist)
+taxonomy_ms <- taxonomy[OTU %in% colnames(abundance)[3:ncol(abundance_ms)]]
+
+
+
+```
+
+
+## Transform Data For mmvec
+For mmvec, we need to change the file format of the data.
+
+Microbial Abundance:  Transpose so 'species' are rows and samples are columns. Write out as tsv, then conver to biom.
+Taxonomy:             Concatenate all the taxanomic ranks with ";"
+Metadata:             Make MS_barcode the main identifier for all samples
+
+*Abundance File*
+Fix names, transpose, write out as biom.
+
+```{r}
+## Abundance file fromatting
+library(biomformat)
+
+# pull out ids
+seq_ids  <- abundance_ms[, Group]
+otus_ids <- colnames(abundance_ms)[3:ncol(abundance_ms)]
+
+# drop samples missing from abundance and match the order of abundance rows
+metadata_ms <- metadata_ms[id %in% seq_ids]
+metadata_ms <- metadata_ms[order(match( id, seq_ids))]
+
+# MS barcodes will be the new seq_ids
+new_seq_ids <- metadata_ms$MS_barcode
+
+# It's now safe drop the group column and label column
+abundance_ms[, c("Group","label"):=NULL]
+
+# transpose
+t_abundance_ms <- transpose(abundance_ms)
+
+# assign MS_barcods as column names (i.e. sample names)
+colnames(t_abundance_ms) <- as.character(new_seq_ids)
+
+# assign otu names as rownames
+row.names(t_abundance_ms) <- otus_ids
+
+# write out as biom file (v1)
+# write_biom(t_abundance_ms, "data/processed/cleaned/mmvec/transect_microbes_mmvec.biom")
+
+# write out as csv file
+fwrite(t_abundance_ms, "data/processed/cleaned/mmvec_microbe_data/transect_microbes_mmvec.csv", row.names = T)
+
+
+t_abundance_ms[1:5,1:5]
+```
+
+
+*Taxonomy File*
+Concatenate names and write out as tsv file
+
+```{r}
+# columns to concatenate
+columns_to_smoosh <- colnames(taxonomy)[-c(1:2)]
+columns_to_smoosh
+
+# prefixes to add to each column
+prefixes <- c("k__","p__", "c__","o__","f__","g__")
+
+# paste prefixes onto each column
+for (i  in seq_along(prefixes)) {
+  
+
+taxonomy_ms[ , (columns_to_smoosh[i]) := lapply(.SD, function(x, pref) paste(pref, x, sep = ""), pref=prefixes[i]), .SDcols = columns_to_smoosh[i]]
+}
+# smoosh columns 
+taxonomy_ms[, Taxon:= do.call(paste, c(.SD, sep = ";")), .SDcols = columns_to_smoosh]
+
+# select OTU and new taxonomy column
+taxonomy_clean <- taxonomy_ms[, .(OTU, Taxon)]
+taxonomy_clean$Taxon <- paste(taxonomy_clean$Taxon, "s__",sep = ";")
+
+# rename OTU to Feature ID
+setnames(taxonomy_clean, "OTU", "Feature ID")
+
+# add prefixes to each taxonomic rank
+
+fwrite(taxonomy_clean, "data/processed/cleaned/mmvec_microbe_data/microbe_taxonomy_mmvec.tsv", sep = "\t", row.names = F)
+
+taxonomy_clean[1:5]
+```
+
+
+# All Done !
+
+Abundance file is transposed. The column names match MS sample barcodes. The data is written out as a biom file.
+
+Taxonomy file is concatenated and written out as a tsv file. Following mmvec github, the taxonomy is stored in column "Taxon". 
+The OTU ids are the first column, which is called "OTU". Hopefully that's okay. 
+
+
+
+

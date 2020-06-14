@@ -200,15 +200,15 @@ coords_list <- apply(coords,1, FUN = function(x){
 
 zscale <- 10
 rgl::clear3d()
-elev_matrix %>% 
-  sphere_shade(texture = "imhof1") %>% 
+elev_matrix %>%
+  sphere_shade(texture = "imhof1") %>%
   add_water(watermap, color = "imhof1") %>%
   add_shadow(raymat, max_darken = 0.5) %>%
   add_shadow(ambmat, 0) %>%
   plot_3d(elev_matrix, zscale = zscale, windowsize = c(1200, 1000),
           water = TRUE, wateralpha = 0.5,
           theta = -120, phi = 20, zoom = 0.65, fov = 0)
- 
+
 
 render_snapshot()
 ```
