@@ -35,12 +35,16 @@ Data consists of a list of dataframes: sample metadata, sequence abundance, and 
 
 ```{r setup}
 # load libraries
+## analysis
 library(phyloseq)
-library(viridisLite)
 library(speedyseq)
-library(ggplot2)
-library(dplyr)
 library(vegan)
+## plotting
+library(gridExtra)
+library(ggplot2)
+library(viridisLite)
+## utility
+library(dplyr)
 library(data.table)
 
 # set seed
@@ -146,6 +150,47 @@ rm(ST_chem)
 
 ```
 
+## Match up the samples
+Some samples are exclusive to microbial dataset and some are exclusive to the metabolite data set. 
+
+List the samples that differ between the data sets. 
+We might try to recover some of this data, but for now, just drop everything that doesn't match.
+
+```{r}
+# find mismatches
+DNA_sample_bcodes <- ST_16S_phy@sam_data$sample_barcode
+print( paste("Total DNA samples = ", length(DNA_sample_bcodes)))
+
+MS_sample_bcodes  <- ST_chem_phy@sam_data$sample_barcode
+print( paste("Total MS samples = ", length(MS_sample_bcodes)))
+
+MS_no_DNA <- ST_chem_phy@sam_data[ ! (ST_chem_phy@sam_data$DNA_barcode %in% DNA_sample_bcodes) ] %>%
+  as.matrix() %>%
+  as.data.frame()
+
+print( paste("In MS data, but not in DNA = ", nrow(MS_no_DNA) ))
+
+DNA_no_MS <- ST_16S_phy@sam_data[ ! (ST_16S_phy@sam_data$MS_barcode %in% MS_sample_bcodes)]%>%
+  as.matrix() %>%
+  as.data.frame()
+
+print( paste("In DNA data, but not in MS = ", nrow(DNA_no_MS)))
+
+
+# subset both datasets
+ST_chem_phy <- subset_samples(ST_chem_phy, DNA_barcode %in% ST_16S_phy@sam_data$sample_barcode)
+
+ST_16S_phy  <- subset_samples(ST_16S_phy, sample_barcode %in% ST_chem_phy@sam_data$DNA_barcode)
+
+# check number samples in both data sets
+nsamples(ST_chem_phy)
+nsamples(ST_16S_phy)
+
+
+```
+
+
+
 
 ## Read in unifrac distances
 Distances are saved as a lower triangular matrix.
@@ -249,7 +294,14 @@ ST.uni <- get_unifrac(ST_16S_phy)
 
 ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
 
-# ordinate metabolome samples
+# ordinate metabolite samples
+
+ ## from physeq source code, import veganifyOTU function
+  veganifyOTU <- function(physeq){
+  if(taxa_are_rows(physeq)){physeq <- t(physeq)}
+  return(as(otu_table(physeq), "matrix"))
+  }
+
 
 ST_chem.ord <- ordinate(ST_chem_phy, "NMDS", distance = "bray")
 
@@ -261,7 +313,7 @@ ST_chem.ord <- ordinate(ST_chem_phy, "NMDS", distance = "bray")
 
 # microbes
 all_micro_habitat <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color = "habitat", shape = "host")
-all_micro_habitat <- all_micro + scale_shape_discrete(solid = T)
+all_micro_habitat <- all_micro_habitat + scale_shape_discrete(solid = T)
 all_micro_habitat
 
 
@@ -270,7 +322,7 @@ ggsave("outputs/figures/microbe_all_samples_habitat_nmds.png")
 
 # metabolites
 all_chem_habitat <- plot_ordination(ST_chem_phy, ST_chem.ord, type="samples", color = "habitat", shape = "host")
-all_chem_habitat <- all_chem + scale_shape_discrete(solid = T)
+all_chem_habitat <- all_chem_habitat + scale_shape_discrete(solid = T)
 all_chem_habitat
 
 ggsave("outputs/figures/metabolite_all_samples_habitat_nmds.png")
@@ -282,16 +334,210 @@ all_micro_elevation <- plot_ordination(ST_16S_phy, ST.ord, type="samples", color
 all_micro_elevation <- all_micro_elevation + scale_shape_discrete(solid = T) + uniform_gradient_color()
 all_micro_elevation
 
+ggsave("outputs/figures/microbe_all_samples_distance_nmds.png")
+
 # metabolites
 all_chem_elevation <- plot_ordination(ST_chem_phy, ST_chem.ord, type="samples", color = "elevation", shape = "host")
 all_chem_elevation <- all_chem_elevation + scale_shape_discrete(solid = T) + uniform_gradient_color()
 all_chem_elevation
 
 # write to png
-ggsave("outputs/figures/all_samples_nmds.png")
+ggsave("outputs/figures/metabolite_all_samples_distance_nmds.png")
 
 rm(ST.ord)
+rm(ST_chem.ord)
 ```
+
+
+
+### Ordinations For Manuscript
+Craig's Request: 
+
+3 panels across: Microbiome, Metabolome, Procrustes match
+And 6 panels down, something like:
+- All samples
+- Marine Samples
+- Soils and Sediments (Terrestrial)
+- Plants (perhaps just rhizosphere)
+- Water
+- Insects
+
+First, let's make a function to do the plotting:
+
+```{r}
+# function paired_nmds will plot nmds for microbial and metabolite data and return a list of plots
+
+paired_ordination <- function(microbe_phy,
+                              chem_phy, description = NULL,
+                              method = "MDS", 
+                              chem_dist = "jaccard", 
+                              microbe_dist = "unifrac",
+                              color = "shore_dist",
+                              shape = "sample_type"  )
+  {
+  
+  # microbe
+  ## distance
+  if(microbe_dist == "unifrac"){
+     ST.dist <- get_unifrac(microbe_phy)
+     
+  } else(
+    ST.dist <- vegdist(veganifyOTU(microbe_phy), method = microbe_dist)
+  )
+  
+  ## ordinate
+  ST.ord <- ordinate(microbe_phy, method = method, ST.dist)
+  
+  # metabolite
+  ## distance
+  if(method == "NMDS"){
+   ST_chem.dist = chem_dist 
+  }else{
+  ST_chem.dist <- vegdist(veganifyOTU(chem_phy), method = chem_dist)
+  }
+  ## ordinate
+  ST_chem.ord <- ordinate(chem_phy, method = method, ST_chem.dist)
+  
+  # plot microbe ordination
+  p_micro = plot_ordination(
+  microbe_phy,
+  ST.ord,
+  type = "samples",
+  color = color,
+  shape = shape,
+  title = paste(method, "Microbe", microbe_dist, description, "Samples", sep = ", ")
+  )
+  
+  p_micro <- p_micro + scale_shape_discrete(solid = T) + uniform_gradient_color()
+  print(p_micro)
+  
+  # plot metabolite ordination
+  p_chem = plot_ordination(
+  chem_phy,
+  ST_chem.ord,
+  type = "samples",
+  color = color,
+  shape = shape,
+  title = paste(method, "Metabolite", chem_dist, description, "Samples", sep = ", ")
+  )
+  
+  p_chem <- p_chem + scale_shape_discrete(solid = T) + uniform_gradient_color()
+  print(p_chem)
+  
+  
+  # TODO calculate mantel
+  ## arrange MS distance matrix to match the microbe sample order
+  # chem_dist_mat <- ST_chem.dist %>% as.matrix()
+  # re_order      <- match(colnames(chem_dist_mat), microbe_phy@sam_data$MS_barcode)
+  # chem_dist_mat <- chem_dist_mat[re_order, re_order]
+  # 
+  # mantel(ST.dist, ST_chem.dist)
+  # 
+  # return plots as list
+  
+  plot_list <- list(p_micro,p_chem)
+  names(plot_list) <- c( "micro", "chem" )
+  return(plot_list)
+  
+}
+
+```
+
+Now run the plotting function on the data subsets
+
+
+```{r}
+# Initialize plot list
+p <- list()
+
+# All samples
+p$all <- paired_ordination(
+                    microbe_phy = ST_16S_phy,
+                    chem_phy = ST_chem_phy,
+                    description = "all",
+                    shape = "habitat"
+                    )
+
+# Marine
+ST  <- subset_samples(ST_16S_phy, habitat == "Marine")
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+ST_chem <- subset_samples(ST_chem_phy, habitat == "Marine")
+ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
+
+p$marine <- paired_ordination(ST, ST_chem, description = "Marine")
+
+
+
+# Soils and Sediments
+ST  <- subset_samples(ST_16S_phy,
+                      habitat != "Marine" & sample_type %in% c("SoilShallow", "SoilDeep", "Sediment"))
+
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+ST_chem <- subset_samples(ST_chem_phy,
+                          habitat != "Marine" & sample_type %in% c("SoilShallow", "SoilDeep", "Sediment"))
+
+ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
+
+p$soil_sed <-paired_ordination(ST, ST_chem, "Soil & Sediment")
+
+
+# Plant Roots
+ST  <- subset_samples(ST_16S_phy, sample_type %in% c("PlantRoot"))
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+ST_chem <- subset_samples(ST_chem_phy, sample_type %in% c("PlantRoot"))
+ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
+
+p$plant_roots <-paired_ordination(ST, ST_chem, "Plant Roots")
+
+# Water
+
+ST  <- subset_samples(ST_16S_phy, sample_type %in% c("WaterNonSaline"))
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+ST_chem <- subset_samples(ST_chem_phy, sample_type %in% c("WaterNonSaline"))
+ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
+
+p$water <- paired_ordination(ST, ST_chem, description = "WaterNonSaline")
+
+# Inverts
+
+ST  <- subset_samples(ST_16S_phy, sample_type %in% c("Drosophila", "Mosquito"))
+ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
+
+ST_chem <- subset_samples(ST_chem_phy, sample_type %in% c("Drosophila", "Mosquito"))
+ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
+
+p$invert <- paired_ordination(ST, ST_chem, description = "Invert")
+
+```
+
+Now that we have the plots, facet them in the correct order.
+
+
+```{r}
+grid.arrange(p$all$micro        , p$all$chem,
+             p$marine$micro     , p$marine$chem,
+             p$soil_sed$micro   , p$soil_sed$chem,
+             p$plant_roots$micro, p$plant_roots$chem,
+             p$water$micro      , p$water$chem,
+             p$invert$micro     , p$invert$chem,
+             nrow = 6, ncol = 2
+             )
+
+g <-arrangeGrob(p$all$micro        , p$all$chem,
+             p$marine$micro     , p$marine$chem,
+             p$soil_sed$micro   , p$soil_sed$chem,
+             p$plant_roots$micro, p$plant_roots$chem,
+             p$water$micro      , p$water$chem,
+             p$invert$micro     , p$invert$chem,
+             nrow = 6, ncol = 2)
+
+ggsave("outputs/figures/combined_microbe_metabolite_mds.png", g, width = 10, height = 20)
+```
+
 
 
 ### Just Host Associated
@@ -299,15 +545,22 @@ rm(ST.ord)
 ST  <- subset_samples(ST_16S_phy, host != "Nonhost")
 ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 
-
+ST_chem <- subset_samples(ST_chem_phy, host != "Nonhost")
+ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
 
 # ordinate
 ST.uni <- get_unifrac(ST)
 ST.ord <- ordinate(ST, "NMDS", ST.uni)
 
+ST_chem.ord <- ordinate(ST_chem,"NMDS", distance = "bray")
+
 # by sample
-p = plot_ordination(ST, ST.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Unifrac, Transect Samples, All OTUs")
+p = plot_ordination(ST, ST.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Microbe, Unifrac, Transect Samples, All OTUs")
 p + scale_shape_discrete(solid = T)
+
+p = plot_ordination(ST_chem, ST_chem.ord, type="samples", color = "habitat", shape = "host", title="NMDS, Metabolite, Bray, Transect Samples, All OTUs")
+p + scale_shape_discrete(solid = T)
+
 ```
 
 
@@ -358,6 +611,7 @@ p + scale_shape_discrete(solid = T)
 rm(ST.ord)
 rm(ST.uni)
 ```
+
 #### Separate Ordinations By Host Type
 
 ```{r hostNMDS, echo = F, message=F, results='hide'}
