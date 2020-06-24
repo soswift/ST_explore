@@ -186,6 +186,28 @@ ST_16S_phy  <- subset_samples(ST_16S_phy, sample_barcode %in% ST_chem_phy@sam_da
 nsamples(ST_chem_phy)
 nsamples(ST_16S_phy)
 
+# switch DNA samples over to MS barcodes so everything is unified
+## pull out otu table and sample data
+otus    <- ST_16S_phy@otu_table
+samples <- ST_16S_phy@sam_data
+taxa    <- ST_16S_phy@tax_table
+
+## change sample ids to ms barcodes
+samples$sequence_id <-row.names(samples)
+row.names(samples) <- samples$MS_barcode
+colnames(otus)     <- samples$MS_barcode
+
+ST_16S_phy  <- phyloseq(samples, otus, taxa)
+
+rm(samples, otus, taxa)
+
+## check that names match
+if (all( sample_names(ST_16S_phy) %in% sample_names(ST_chem_phy) ) ){
+  message("MS and DNA sample names match")
+} else (
+  warning("MS and DNA sample names are different")
+)
+
 
 ```
 
@@ -230,9 +252,16 @@ row.names(m) <- samp_names
 rm(x)
 
 # function for subsetting the distance matrix
-get_unifrac <- function(physeq, unifrac_matrix = m){
+get_unifrac <- function(physeq, unifrac_matrix = m, sample_id_column = NULL){
   # subsets unifrac matrix columns and rows by set of ids
+  
+  # if no sample id column specified, use sample names
+  if(is.null(sample_id_column)){
   ids <- sample_names(physeq)
+  }else{
+  dat <- sample_data(physeq)
+  ids <- dat[[sample_id_column]]
+  }
   if( ! ( all ( ids %in% colnames( unifrac_matrix )))){
     warning("Not all ids are in the distance matrix")
     print(ids[! ( ids %in% colnames(unifrac_matrix) ) ])
@@ -278,6 +307,27 @@ uniform_gradient_color <- function(palname = pal_c){
 
 ```
 
+# Write out data to files
+Before going further, write out the data tables used for subsequent analyses to files.
+
+```{r}
+# Get unifrac distances from file
+ST.uni <- get_unifrac(ST_16S_phy, sample_id_column = "sequence_id")
+
+
+# write out all data up to this point
+
+## 16S data
+# write.csv(otu_table(ST_16S_phy), "data/processed/MSand16S/ST_correlation_otu_table.csv", row.names = T)
+# write.csv(tax_table(ST_16S_phy), "data/processed/MSand16S/ST_correlation_tax_table.csv", row.names = T)
+# write.csv(sample_data(ST_16S_phy), "data/processed/MSand16S/ST_correlation_otu_sample_data.csv", row.names = T)
+# write.csv(as.matrix(ST.uni), "data/processed/MSand16S/ST_correlation_unifrac_dist.csv", row.names = T)
+# 
+# ## MS data
+# write.csv(otu_table(ST_chem_phy), "data/processed/MSand16S/ST_correlation_MS_table.csv", row.names = T)
+# write.csv(sample_data(ST_chem_phy), "data/processed/MSand16S/ST_correlation_MS_sample_data.csv", row.names = T)
+```
+
 
 # NMDS
 
@@ -289,8 +339,6 @@ To start, NMDS of all samples, all OTUs (no additional filtering), Unifrac dissi
 ```{r allNMDS, echo = F, message=F, results='hide'}
 
 # ordinate microbial using unifrac distances
-
-ST.uni <- get_unifrac(ST_16S_phy)
 
 ST.ord <- ordinate(ST_16S_phy, "NMDS", ST.uni)
 
@@ -528,12 +576,12 @@ grid.arrange(p$all$micro        , p$all$chem,
              )
 
 g <-arrangeGrob(p$all$micro        , p$all$chem,
-             p$marine$micro     , p$marine$chem,
-             p$soil_sed$micro   , p$soil_sed$chem,
-             p$plant_roots$micro, p$plant_roots$chem,
-             p$water$micro      , p$water$chem,
-             p$invert$micro     , p$invert$chem,
-             nrow = 6, ncol = 2)
+                p$marine$micro     , p$marine$chem,
+                p$soil_sed$micro   , p$soil_sed$chem,
+                p$plant_roots$micro, p$plant_roots$chem,
+                p$water$micro      , p$water$chem,
+                p$invert$micro     , p$invert$chem,
+                nrow = 6, ncol = 2)
 
 ggsave("outputs/figures/combined_microbe_metabolite_mds.png", g, width = 10, height = 20)
 ```
