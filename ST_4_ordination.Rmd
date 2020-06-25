@@ -46,6 +46,7 @@ library(viridisLite)
 ## utility
 library(dplyr)
 library(data.table)
+library(usedist)
 
 # set seed
 
@@ -220,7 +221,8 @@ Need to import, arrange, mirror, and convert to distance matrix.
 
 ```{r import_unifrac}
 # Read in unifrac distances
-x <- scan("data/raw/sequence/all_unifrac_100.unweighted.dist")
+read_dist_file <- function(file = "data/raw/sequence/all_unifrac_100.unweighted.dist", sample_id_column = NULL, reference_physeq = NULL ){
+x <- scan(file)
 x <- x[-1]
 
 # make empty matrix
@@ -249,28 +251,52 @@ m <- makeSymm(m)
 colnames(m) <- samp_names
 row.names(m) <- samp_names
 
-rm(x)
+if(!is.null(sample_id_column)){
+  dat <- sample_data(reference_physeq)
+  ids <- dat[[sample_id_column]]
+  new_ids <- row.names(dat)
+  
+  m <- m[ids,ids]
+  colnames(m)  <- new_ids
+  row.names(m) <- new_ids
+  
+}
+
+
+
+
+return(m)
+}
+
+m <- read_dist_file(file = "data/raw/sequence/all_unifrac_100.unweighted.dist", sample_id_column = "sequence_id", reference_physeq = ST_16S_phy)
+
+
 
 # function for subsetting the distance matrix
-get_unifrac <- function(physeq, unifrac_matrix = m, sample_id_column = NULL){
-  # subsets unifrac matrix columns and rows by set of ids
+get_unifrac <- function(physeq, unifrac_matrix = m){
+  # this function subsets unifrac matrix columns and rows by set of ids
   
-  # if no sample id column specified, use sample names
-  if(is.null(sample_id_column)){
+  # use sample names from phyloseq object
   ids <- sample_names(physeq)
-  }else{
-  dat <- sample_data(physeq)
-  ids <- dat[[sample_id_column]]
-  }
+  new_ids = ids
+  
+  
   if( ! ( all ( ids %in% colnames( unifrac_matrix )))){
+    
     warning("Not all ids are in the distance matrix")
     print(ids[! ( ids %in% colnames(unifrac_matrix) ) ])
+    
   } else {
-  dist <- as.dist(unifrac_matrix[ids,ids])
-  return(dist)
+  
+  dist_obj <-as.dist(unifrac_matrix[ids,ids])
+    
+
+  return(dist_obj)
   }
 }
 
+# Get unifrac distances from file
+ST.uni <- get_unifrac(ST_16S_phy)
 
 
 ```
@@ -279,7 +305,7 @@ get_unifrac <- function(physeq, unifrac_matrix = m, sample_id_column = NULL){
 ```{r ggplot}
 theme_set(theme_bw())
 
-pal_d = "Dark2"
+pal_d = "Paired"
 scale_colour_discrete <-  function(palname=pal_d, ...){
   scale_colour_brewer(palette=palname, ...)
 }
@@ -311,10 +337,6 @@ uniform_gradient_color <- function(palname = pal_c){
 Before going further, write out the data tables used for subsequent analyses to files.
 
 ```{r}
-# Get unifrac distances from file
-ST.uni <- get_unifrac(ST_16S_phy, sample_id_column = "sequence_id")
-
-
 # write out all data up to this point
 
 ## 16S data
@@ -418,15 +440,18 @@ First, let's make a function to do the plotting:
 paired_ordination <- function(microbe_phy,
                               chem_phy, description = NULL,
                               method = "MDS", 
-                              chem_dist = "jaccard", 
-                              microbe_dist = "unifrac",
+                              chem_dist = "bray", 
+                              microbe_dist = "Unifrac",
                               color = "shore_dist",
-                              shape = "sample_type"  )
+                              shape = "host")
   {
+  # Ordinations #
   
-  # microbe
+  # Microbe 
+  micro_dat <- sample_data(microbe_phy)
+  
   ## distance
-  if(microbe_dist == "unifrac"){
+  if(microbe_dist == "Unifrac"){
      ST.dist <- get_unifrac(microbe_phy)
      
   } else(
@@ -434,17 +459,8 @@ paired_ordination <- function(microbe_phy,
   )
   
   ## ordinate
+  message("Ordinating microbes")
   ST.ord <- ordinate(microbe_phy, method = method, ST.dist)
-  
-  # metabolite
-  ## distance
-  if(method == "NMDS"){
-   ST_chem.dist = chem_dist 
-  }else{
-  ST_chem.dist <- vegdist(veganifyOTU(chem_phy), method = chem_dist)
-  }
-  ## ordinate
-  ST_chem.ord <- ordinate(chem_phy, method = method, ST_chem.dist)
   
   # plot microbe ordination
   p_micro = plot_ordination(
@@ -456,9 +472,33 @@ paired_ordination <- function(microbe_phy,
   title = paste(method, "Microbe", microbe_dist, description, "Samples", sep = ", ")
   )
   
-  p_micro <- p_micro + scale_shape_discrete(solid = T) + uniform_gradient_color()
+  # scale point shapes
+  p_micro <- p_micro + scale_shape_discrete(solid = T) 
+  
+  # if color is continuous, set uniform gradient color
+  if(is.numeric(micro_dat[[color]]) | is.integer(micro_dat[[color]])){
+    p_micro <- p_micro + uniform_gradient_color()
+  }
+  
   print(p_micro)
   
+  
+  # Metabolite
+  chem_dat <- sample_data(chem_phy) 
+  
+  ## distance
+  ST_chem.dist <- vegdist(veganifyOTU(chem_phy), method = chem_dist)
+
+  ## ordinate
+  message("Ordinating metabolites")
+  
+  if(method == "NMDS"){
+   # implements distance calculations internally
+   ST_chem.ord <- ordinate(chem_phy, method = method, chem_dist)
+  } else{
+   ST_chem.ord <- ordinate(chem_phy, method = method, ST_chem.dist)
+  }
+
   # plot metabolite ordination
   p_chem = plot_ordination(
   chem_phy,
@@ -469,22 +509,93 @@ paired_ordination <- function(microbe_phy,
   title = paste(method, "Metabolite", chem_dist, description, "Samples", sep = ", ")
   )
   
-  p_chem <- p_chem + scale_shape_discrete(solid = T) + uniform_gradient_color()
+  ## scale point shapes
+  p_chem <- p_chem + scale_shape_discrete(solid = T) 
+  ## if color is continuous, set uniform gradient color
+  
+    if(is.numeric(chem_dat[[color]]) | is.integer(chem_dat[[color]])){
+    p_chem <- p_chem + uniform_gradient_color()
+    }
+  
   print(p_chem)
   
   
-  # TODO calculate mantel
+  # Combined Analysis #
+  
+  # Mantel
+  message("Calculating Mantel")
+  
   ## arrange MS distance matrix to match the microbe sample order
-  # chem_dist_mat <- ST_chem.dist %>% as.matrix()
-  # re_order      <- match(colnames(chem_dist_mat), microbe_phy@sam_data$MS_barcode)
-  # chem_dist_mat <- chem_dist_mat[re_order, re_order]
-  # 
-  # mantel(ST.dist, ST_chem.dist)
-  # 
+   ids <- colnames(ST.dist)
+   chem_dist_mat <- ST_chem.dist %>% as.matrix()
+   chem_dist_mat <- chem_dist_mat[ids, ids]
+   chem_dist <- as.dist(chem_dist_mat)
+  
+  ## calculate mantel stat
+   mant_score <- mantel(ST.dist, ST_chem.dist)
+   
+  
+   
+  # Procustes
+  message("Procruste rotation") 
+    ## pull out ordination point coordinates and join to metadata
+  
+  pull_vec <- function(ord, metadata) {
+    ord_dt        <- ord$vectors %>% as.data.frame()
+    ord_dt$safe_id   <- row.names(ord$vectors)
+    
+    metadata$safe_id <- row.names(metadata)
+    ord_dt <-left_join(ord_dt, metadata, by = "safe_id")
+    ord_dt <- as.data.table(ord_dt)
+    setkey(ord_dt, safe_id)
+    setorder(ord_dt, safe_id)
+    return(ord_dt)
+  }
+  
+  # data table of microbe ordination
+  ord_micro.dt <- pull_vec(ST.ord, micro_dat)
+  # data table of chem ordination
+  ord_chem.dt <- pull_vec(ST_chem.ord, chem_dat)
+  
+   ## calculate procustes
+  proc <- ade4::procuste(dfX = ord_micro.dt[, list(Axis.1, Axis.2)],
+                         dfY = ord_chem.dt[, list(Axis.1, Axis.2)])
+ 
+  
+  # add new procustes coords to data tables
+  ord_micro.dt[, c("proc.x","proc.y") := proc$tabX]
+  ord_chem.dt[, c("proc.x","proc.y") := proc$tabY]
+  
+  ord_micro.dt[, data_type := "Microbes"]
+  ord_chem.dt[, data_type := "Metabolites"]
+  
+  cols_to_keep <- c("proc.x", "proc.y", "safe_id", "habitat", "sample_type","trophic","host","shore_dist", "data_type")
+  
+  ord_comb.dt <- rbindlist(list(ord_micro.dt[, cols_to_keep, with = F],
+                                ord_chem.dt[, cols_to_keep, with = F]))
+  ord_comb.dt$plot_color <- ord_comb.dt[[color]]
+  
+  p_proc <- ggplot(ord_comb.dt, aes(proc.x, proc.y,
+                          color = plot_color,
+                          shape = data_type)) +
+   
+                          geom_point(size = 1) +
+                          geom_line(aes(group = safe_id), color = "gray", alpha = 0.3)+
+                          labs(title = paste(description, ": Procruste Rotation of Ordinations"),
+                                  caption = paste("Mantel Statistic = ", round(mant_score$statistic, 3),
+                                                  "Mantel Significance = ", round(mant_score$signif, 3)),
+                               x = "",
+                               y = ""
+                                  )
+  if(is.numeric(ord_comb.dt$plot_color) | is.integer(ord_comb.dt$plot_color)){
+      p_proc <- p_proc + uniform_gradient_color()
+  }
+                  
+  print(p_proc)
   # return plots as list
   
-  plot_list <- list(p_micro,p_chem)
-  names(plot_list) <- c( "micro", "chem" )
+  plot_list <- list(p_micro,p_chem, p_proc)
+  names(plot_list) <- c( "micro", "chem", "proc")
   return(plot_list)
   
 }
@@ -502,8 +613,9 @@ p <- list()
 p$all <- paired_ordination(
                     microbe_phy = ST_16S_phy,
                     chem_phy = ST_chem_phy,
-                    description = "all",
-                    shape = "habitat"
+                    description = "All",
+                    shape = "habitat",
+                    color = "sample_type"
                     )
 
 # Marine
@@ -513,19 +625,19 @@ ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 ST_chem <- subset_samples(ST_chem_phy, habitat == "Marine")
 ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
 
-p$marine <- paired_ordination(ST, ST_chem, description = "Marine")
+p$marine <- paired_ordination(ST, ST_chem, description = "Marine", color = "sample_type")
 
 
 
 # Soils and Sediments
 ST  <- subset_samples(ST_16S_phy,
-                      habitat != "Marine" & sample_type %in% c("SoilShallow", "SoilDeep", "Sediment"))
-
+                      habitat != "Marine" &
+                        sample_type %in% c("SoilShallow", "SoilDeep", "Sediment"))
 ST  <- prune_taxa(taxa_sums(ST) > 0, ST)
 
 ST_chem <- subset_samples(ST_chem_phy,
-                          habitat != "Marine" & sample_type %in% c("SoilShallow", "SoilDeep", "Sediment"))
-
+                          habitat != "Marine" &
+                            sample_type %in% c("SoilShallow", "SoilDeep", "Sediment"))
 ST_chem <- prune_taxa(taxa_sums(ST_chem) > 0, ST_chem)
 
 p$soil_sed <-paired_ordination(ST, ST_chem, "Soil & Sediment")
@@ -566,24 +678,24 @@ Now that we have the plots, facet them in the correct order.
 
 
 ```{r}
-grid.arrange(p$all$micro        , p$all$chem,
-             p$marine$micro     , p$marine$chem,
-             p$soil_sed$micro   , p$soil_sed$chem,
-             p$plant_roots$micro, p$plant_roots$chem,
-             p$water$micro      , p$water$chem,
-             p$invert$micro     , p$invert$chem,
-             nrow = 6, ncol = 2
+grid.arrange(p$all$micro        , p$all$chem,         p$all$proc,
+               p$marine$micro     , p$marine$chem,      p$marine$proc,
+               p$soil_sed$micro   , p$soil_sed$chem,    p$soil_sed$proc,
+               p$plant_roots$micro, p$plant_roots$chem, p$plant_roots$proc,
+               p$water$micro      , p$water$chem,       p$water$proc,
+               p$invert$micro     , p$invert$chem,      p$invert$proc,
+               nrow = 6, ncol = 3
              )
 
-g <-arrangeGrob(p$all$micro        , p$all$chem,
-                p$marine$micro     , p$marine$chem,
-                p$soil_sed$micro   , p$soil_sed$chem,
-                p$plant_roots$micro, p$plant_roots$chem,
-                p$water$micro      , p$water$chem,
-                p$invert$micro     , p$invert$chem,
-                nrow = 6, ncol = 2)
+g <-arrangeGrob(p$all$micro        , p$all$chem,         p$all$proc,
+                 p$marine$micro     , p$marine$chem,      p$marine$proc,
+                 p$soil_sed$micro   , p$soil_sed$chem,    p$soil_sed$proc,
+                 p$plant_roots$micro, p$plant_roots$chem, p$plant_roots$proc,
+                 p$water$micro      , p$water$chem,       p$water$proc,
+                 p$invert$micro     , p$invert$chem,      p$invert$proc,
+                 nrow = 6, ncol = 3)
 
-ggsave("outputs/figures/combined_microbe_metabolite_mds.png", g, width = 10, height = 20)
+ggsave("outputs/figures/combined_microbe_metabolite_mds.png", g, width = 15, height = 20)
 ```
 
 
@@ -640,9 +752,6 @@ ST.uni <- get_unifrac(ST)
 #################################################################
 ## ST is the phyloseq object containing just transect samples! ##
 #################################################################
-
-# remove full dataset
-rm(ST_16S_phy)
 
 # ordinate
 
